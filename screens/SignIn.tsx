@@ -1,5 +1,5 @@
 import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, Keyboard } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import colors from '../lib/colors'
 import { Formik } from 'formik'
 import * as yup from 'yup'
@@ -15,13 +15,13 @@ export default function Signin() {
         password:''
     })
     const ATextInput = Animated.createAnimatedComponent(TextInput)
-    const usernameBorderColor = useSharedValue(scheme === 'dark' ? 'white' : 'black',)
+    const usernameBorderColor = useSharedValue('white')
     const usernameBorderAnimStyle = useAnimatedStyle(() => {
         return {
             borderColor:usernameBorderColor.value,
         }
     }, [])
-    const passwordBorderColor = useSharedValue(scheme === 'dark' ? 'white' : 'black',)
+    const passwordBorderColor = useSharedValue('white')
     const passwordBorderAnimStyle = useAnimatedStyle(() => {
         return {
             borderColor: passwordBorderColor.value
@@ -33,14 +33,16 @@ export default function Signin() {
             marginBottom:formMarginBottom.value
         }
     })
+    
     useEffect(() => {
         Keyboard.addListener('keyboardDidShow', () => {
-            formMarginBottom.value = withTiming(320, {duration:200})
+            formMarginBottom.value = withTiming(320, {duration:100})
         })
         Keyboard.addListener('keyboardDidHide', () => {
-            formMarginBottom.value = withTiming(50, {duration:150})
+            formMarginBottom.value = withTiming(50, {duration:100})
         })
     }, [])
+    const passwordInputRef = useRef(null)
     const signInSchema = yup.object().shape({
         username:yup.string(),
         password:yup.string().min(8, "Incorrect password")
@@ -50,19 +52,11 @@ export default function Signin() {
         if(focused && field === 'username'){
             usernameBorderColor.value = withTiming(colors.orange, {duration:150})
         }else if(!focused && field === 'username'){
-            if(scheme === 'dark'){
-                usernameBorderColor.value = withTiming('white', {duration:150})
-            }else{
-                usernameBorderColor.value = withTiming('black', {duration:150})
-            }
+            usernameBorderColor.value = withTiming('white', {duration:150})
         }else if(focused && field === 'password'){
             passwordBorderColor.value = withTiming(colors.orange, {duration:150})
         }else if(!focused && field === 'password'){
-            if(scheme === 'dark'){
-                passwordBorderColor.value = withTiming('white', {duration:150})
-            }else{
-                passwordBorderColor.value = withTiming('black', {duration:150})
-            }
+            passwordBorderColor.value = withTiming('white', {duration:150})
         }
     }
     async function signIn(email:string, password:string){
@@ -94,15 +88,20 @@ return (
                         }}
                         value={values.username}
                         placeholder='Username'
+                        placeholderTextColor='white'
                         autoCapitalize='none'
                         style={[styles.inputs, usernameBorderAnimStyle]}
                         onFocus={() => handleBorderColorChange('username', true)}
+                        returnKeyType="next"
+                        // @ts-ignore
+                        onSubmitEditing={() => passwordInputRef.current.focus()}
                     />
                 </View>
                  {/* Password */}
                 <View style={styles.inputWrappers}>
                     <Image source={require('../images/passwordIcon.png')} style={styles.inputIcons}/>
                     <ATextInput
+                        ref={passwordInputRef}
                         onChangeText={handleChange('password')}
                         onChange={() => {
                             if(formErrors.username) setFormErrors(prev => ({...prev, username:''}))
