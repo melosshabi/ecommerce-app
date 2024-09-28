@@ -7,7 +7,7 @@ export default function HamburgerButton() {
     const scheme = useColorScheme()
     const navigation = useNavigation()
   return ( 
-    <Pressable onPress={() => navigation.dispatch(DrawerActions.openDrawer())} style={({pressed}) => [styles.wrapper, pressed && scheme === 'dark' ? {backgroundColor:colors.transparentWhite} : {backgroundColor:colors.black3}]}>
+    <Pressable onPress={() => navigation.dispatch(DrawerActions.openDrawer())} style={({pressed}) => [styles.wrapper, pressed && scheme === 'dark' ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
         <View style={[styles.lines, styles.line1, scheme === "dark" ? {backgroundColor:'white'} : {backgroundColor:"#222222"}]}></View>
         <View style={[styles.lines, styles.line2, scheme === "dark" ? {backgroundColor:'white'} : {backgroundColor:"#222222"}]}></View>
         <View style={[styles.lines, styles.line3, scheme === "dark" ? {backgroundColor:'white'} : {backgroundColor:"#222222"}]}></View>

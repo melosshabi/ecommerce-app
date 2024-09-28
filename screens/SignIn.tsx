@@ -4,6 +4,7 @@ import colors from '../lib/colors'
 import { Formik } from 'formik'
 import * as yup from 'yup'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { useNavigation } from '@react-navigation/native'
 
 const dvw = Dimensions.get('window').width
 const dvh = Dimensions.get('window').height
@@ -59,8 +60,8 @@ export default function Signin() {
             passwordBorderColor.value = withTiming('white', {duration:150})
         }
     }
+    const navigation = useNavigation()
     async function signIn(email:string, password:string){
-
     }
 return (
     <View style={[styles.homeScreen, {backgroundColor: scheme ? colors.black : 'white'}]}>
@@ -119,7 +120,7 @@ return (
                         secureTextEntry={true}
                     />
                 </View>
-                <Pressable style={({pressed}) => [styles.signInBtn, pressed && {backgroundColor:colors.darkerOrange}]}>
+                <Pressable onPress={() => signIn('', '')} style={({pressed}) => [styles.signInBtn, pressed && {backgroundColor:colors.darkerOrange}]}>
                     <Text style={styles.signInBtnText}>Sign In</Text>
                 </Pressable>
             </Animated.View>
