@@ -11,7 +11,8 @@ export default function Footer({currentScreen}:Footer) {
     const navigation = useNavigation()
 return (
     <View style={[styles.footer, darkMode ? {backgroundColor:colors.black, shadowColor:'white', borderTopColor:colors.transparentWhite,} : {backgroundColor:'white', shadowColor:'black', borderTopColor:colors.black3,}]}>
-        <Pressable style={({pressed}) => [styles.buttons, {marginLeft:5}, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}, currentScreen === 'Home' && darkMode ? {backgroundColor:colors.transparentWhite} : currentScreen === "Home" && {backgroundColor:colors.black3}]}>
+        {/* @ts-ignore */}
+        <Pressable onPress={() => navigation.navigate("Home")} style={({pressed}) => [styles.buttons, {marginLeft:5}, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}, currentScreen === 'Home' && darkMode ? {backgroundColor:colors.transparentWhite} : currentScreen === "Home" && {backgroundColor:colors.black3}]}>
             <Image style={[styles.icons, {transform:[{scale:.25}]}]} source={darkMode ? require("../images/home.png") : require('../images/homeBlack.png')}/>
         </Pressable>
 
@@ -37,7 +38,7 @@ const styles = StyleSheet.create({
         elevation:4,
         justifyContent:'space-between',
         alignItems:'center',
-        borderTopWidth:1
+        borderTopWidth:1,
     },
     buttons:{
         width:60,

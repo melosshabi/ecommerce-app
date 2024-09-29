@@ -1,11 +1,10 @@
-import { Dimensions, Image, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native'
+import { Dimensions, Image, Keyboard, NativeSyntheticEvent, Pressable, StyleSheet, Text, TextInput, TextInputChangeEventData, useColorScheme, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { DrawerScreenProps } from '@react-navigation/drawer'
 import {URL} from "@env"
 import colors from '../lib/colors'
 import Footer from '../components/Footer'
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
-import { TextInput } from 'react-native-gesture-handler'
+import Animated, { useAnimatedStyle, useSharedValue, withTiming, } from 'react-native-reanimated'
 
 type ProductDetails = DrawerScreenProps<ComponentProps, 'ProductDetails'>
 const dvh = Dimensions.get("screen").height
@@ -13,6 +12,28 @@ const dvw = Dimensions.get("screen").width
 export default function ProductDetails({route}:ProductDetails) {
     const darkMode = useColorScheme() === 'dark'
     const [productData, setProductData] = useState<Product>()
+    const [imagesCount, setImagesCount] = useState(0)
+    const pageTranslate = useSharedValue(0)
+    const pageTranslateStyle = useAnimatedStyle(() => ({
+      transform:[{translateY:pageTranslate.value}]
+    }))
+    useEffect(() => {
+      async function getProduct(){
+          const res = await fetch(`${URL}/api/productDetails?_id=${route.params._id}`)
+          const data:Product = await res.json()
+          setProductData(data)
+          setImagesCount(data.pictures.length)
+      }
+      getProduct()
+      // I have to use type any in this case since the KeyboardEvent type doesn't include endCoordinates
+      Keyboard.addListener('keyboardDidShow', (e:any) => {
+        pageTranslate.value = withTiming(-e.endCoordinates.height, {duration:150})
+      })
+      Keyboard.addListener("keyboardDidHide", () => {
+        pageTranslate.value = withTiming(0, {duration:150})
+      })
+    }, [])
+
     const [desiredQuantity, setDesiredQuantity] = useState(1)
     const picture1Opacity = useSharedValue(1)
     const [activeImageIndex, setActiveImageIndex] = useState(0)
@@ -52,6 +73,10 @@ export default function ProductDetails({route}:ProductDetails) {
       }
     })
     function changeVisibleImage(newIndex:number){
+      if(newIndex > imagesCount - 1){
+        newIndex = 0
+        setActiveImageIndex(0)
+      }
       if(newIndex === 0){
         picture2Opacity.value = withTiming(0, {duration:150})
         picture3Opacity.value = withTiming(0, {duration:150})
@@ -63,6 +88,7 @@ export default function ProductDetails({route}:ProductDetails) {
       }else if(newIndex === 1){
         picture1Opacity.value = withTiming(0, {duration:150})
         picture2Opacity.value = withTiming(1, {duration:150})
+        picture3Opacity.value = withTiming(0, {duration:150})
         circle1Background.value = withTiming('gray', {duration:150})
         circle2Background.value = withTiming(colors.orange, {duration:150})
         circle3Background.value = withTiming('gray', {duration:150})
@@ -75,29 +101,43 @@ export default function ProductDetails({route}:ProductDetails) {
         setActiveImageIndex(newIndex)
       }else if(newIndex > 2){
         picture3Opacity.value = withTiming(0, {duration:150})
+        picture2Opacity.value = withTiming(0, {duration:150})
         picture1Opacity.value = withTiming(1, {duration:150})
         circle3Background.value = withTiming('gray', {duration:150})
         circle1Background.value = withTiming(colors.orange, {duration:150})
         setActiveImageIndex(0)
       }else if(newIndex < 0){
         picture1Opacity.value = withTiming(0, {duration:150})
-        picture3Opacity.value = withTiming(1, {duration:150})
-        circle1Background.value = withTiming('gray', {duration:150})
-        circle3Background.value = withTiming(colors.orange, {duration:150})
-        setActiveImageIndex(2)
+        if(imagesCount === 3){
+          picture3Opacity.value = withTiming(1, {duration:150})
+          circle1Background.value = withTiming('gray', {duration:150})
+          circle3Background.value = withTiming(colors.orange, {duration:150})
+          setActiveImageIndex(2)
+        } 
+        else{
+          picture2Opacity.value = withTiming(1, {duration:150})
+          circle1Background.value = withTiming('gray', {duration:150})
+          circle2Background.value = withTiming(colors.orange, {duration:150})
+          setActiveImageIndex(1)
+        } 
+        
       }
     }
-    useEffect(() => {
-        async function getProduct(){
-            const res = await fetch(`${URL}/api/productDetails?_id=${route.params._id}`)
-            const data:Product = await res.json()
-            setProductData(data)
-            
-        }
-        getProduct()
-    }, [])
+    const AInput = Animated.createAnimatedComponent(TextInput)
+    const inputBorderColor = useSharedValue(darkMode ? 'white' : 'black')
+    const inputBorderAnim = useAnimatedStyle(() => ({
+        borderColor:inputBorderColor.value
+    }))
+    function handleQuantityInputFocus(focus:boolean){
+      if(focus){
+        inputBorderColor.value = withTiming(colors.orange, {duration:150})
+      }else{
+        inputBorderColor.value = withTiming(darkMode ? 'white' : 'black', {duration:150})
+      }
+    }
   return (
-    <View style={styles.productPage}>
+    
+    <Animated.View style={[styles.productPage, pageTranslateStyle, darkMode && {backgroundColor:colors.black}]}>
       <View>
         <View style={styles.slider}>
           <Pressable onPress={() => changeVisibleImage(activeImageIndex - 1)} style={({pressed}) => [styles.arrowButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
@@ -114,26 +154,26 @@ export default function ProductDetails({route}:ProductDetails) {
         </View>
         <View style={styles.circlesWrapper}>
           <Animated.View style={[styles.circles, circle1AnimStyle]}></Animated.View>
-          <Animated.View style={[styles.circles, circle2AnimStyle]}></Animated.View>
-          <Animated.View style={[styles.circles, circle3AnimStyle]}></Animated.View>
+          {productData?.pictures[1] && <Animated.View style={[styles.circles, circle2AnimStyle]}></Animated.View>}
+          {productData?.pictures[2] && <Animated.View style={[styles.circles, circle3AnimStyle]}></Animated.View>}
         </View>
       </View>
-      <View>
+      <View style={styles.productDetails}>
         <Text style={[styles.productName, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.productName}</Text>
         <Text style={[styles.manufacturer, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.manufacturer}</Text>
         <Text style={[styles.price, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.productPrice}€</Text>
         <Text style={[styles.stock, darkMode ? {color:'white'} : {color:'black'}]}>In Stock: {productData?.quantity}</Text>
-        <TextInput keyboardType='number-pad' value={desiredQuantity.toString()}/>
+        <AInput onBlur={() => handleQuantityInputFocus(false)} onFocus={() => handleQuantityInputFocus(true)} style={[styles.quantityInput, inputBorderAnim]} keyboardType='number-pad' value={desiredQuantity.toString()}/>
       </View>
       <Footer currentScreen={undefined}/>
-    </View>
+    </Animated.View>
   )
 }
 
 const styles = StyleSheet.create({
   productPage:{
     height:dvh - dvh / 7.5,
-    justifyContent:'space-between'
+    justifyContent:'space-between',
   },
   slider:{
     flexDirection:'row',
@@ -162,15 +202,16 @@ const styles = StyleSheet.create({
     height:dvh / 3,
     width: '75%',
     padding:5,
-    // backgroundColor:'red',
     position:'relative'
   },
   productImages:{
     width:'100%',
-    height:"100%",
+    height:'100%',
+    flex:1,
     elevation:4,
     borderRadius:15,
-    position:'absolute'
+    position:'absolute',
+    resizeMode:'contain'
   },
   circlesWrapper:{
     flexDirection:'row',
@@ -186,8 +227,31 @@ const styles = StyleSheet.create({
     borderWidth:2,
     borderColor:'black'
   },
-  productName:{},
-  manufacturer:{},
-  price:{},
-  stock:{},
+  productDetails:{
+    alignItems:'center'
+  },
+  productName:{
+    fontSize:25,
+    textAlign:'center',
+    marginBottom:15
+  },
+  manufacturer:{
+    fontSize:20,
+    textAlign:'center'
+  },
+  price:{
+    fontSize:20,
+    textAlign:'center',
+    marginBottom:10
+  },
+  stock:{
+    fontSize:15,
+    textAlign:'center'
+  },
+  quantityInput:{
+    borderBottomWidth:1,
+    textAlign:'center',
+    fontSize:15,
+    width:'15%'
+  }
 })

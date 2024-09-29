@@ -72,7 +72,7 @@ export default function App() {
       drawerContent={props => drawerContent(props, scheme === 'dark')} >
         <Drawer.Screen name="SignIn" component={SignIn}/>
         <Drawer.Screen name="Home" component={Home}/>
-        <Drawer.Screen name="ProductDetails" component={ProductDetails}/>
+        <Drawer.Screen options={{unmountOnBlur:true}} name="ProductDetails" component={ProductDetails}/>
       </Drawer.Navigator>
     </NavigationContainer>
     </SafeAreaView>

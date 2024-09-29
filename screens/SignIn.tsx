@@ -62,9 +62,11 @@ export default function Signin() {
     }
     const navigation = useNavigation()
     async function signIn(email:string, password:string){
+        // @ts-ignore
+        navigation.navigate("Home")
     }
 return (
-    <View style={[styles.homeScreen, {backgroundColor: scheme ? colors.black : 'white'}]}>
+    <View style={[styles.signInScreen, {backgroundColor: scheme ? colors.black : 'white'}]}>
         <Text style={[styles.title]}>Welcome Back!</Text>
         <Image style={styles.backgroundImage} blurRadius={10} source={require('../images/decoration.jpg')}/>
         <View style={styles.imageForeground}></View>
@@ -131,7 +133,7 @@ return (
 )}
 
 const styles = StyleSheet.create({
-    homeScreen:{
+    signInScreen:{
         height:dvh - dvh / 14,
         alignItems:'center',
         justifyContent:'flex-end'
