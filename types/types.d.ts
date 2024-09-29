@@ -11,7 +11,7 @@ interface Product {
     productReviews:Array,
 }
 type Footer = {
-    currentScreen:"Home" | "Search" | "Cart" | "Profile"
+    currentScreen:"Home" | "Search" | "Cart" | "Profile" | undefined
 }
 type ProductProps = {
     _id:string,
