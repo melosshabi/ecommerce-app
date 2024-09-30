@@ -8,23 +8,31 @@ import colors from './lib/colors';
 import Home from './screens/Home';
 import ProductDetails from './screens/ProductDetails';
 import Search from './screens/Search';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from 'react';
+import Cart from './screens/Cart';
 
 const dvh = Dimensions.get('screen').height
-function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean){
+function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean, user:DecodedToken | null){
   return (
     <View style={[styles.drawer, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
       <View style={styles.avatarWrapper}>
-        <Image style={styles.avatar} source={require("./images/avatar.png")}/>
-        <Text style={[styles.name, darkMode ? {color:'white'} : {color:'black'}]}>Melos Shabi</Text>
+          { user && 
+            <>
+            <Image style={styles.avatar} source={!user?.profilePictureUrl ? require ("./images/avatar.png"): {uri:user.profilePictureUrl}}/>
+            <Text style={[styles.name, darkMode ? {color:'white'} : {color:'black'}]}>{user?.username}</Text>
+          </>
+          }
       </View>
       <View style={styles.options}>
           <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image source={darkMode ? require("./images/user.png") : require('./images/userBlack.png')} style={styles.optionIcons}/>
               <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Account</Text>
           </Pressable>
-          <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
+          <Pressable onPress={() => navigation.navigate('Cart')} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/cart.png") : require("./images/cartBlack.png")}/>
-            <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Cart</Text></Pressable>
+              <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Cart</Text>
+          </Pressable>
           <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/heart.png") : require("./images/heartBlack.png")}/>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Wishlist</Text></Pressable>
@@ -35,7 +43,7 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
               <Image style={styles.optionIcons} source={darkMode ? require("./images/products.png") : require('./images/productsBlack.png')}/>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Products</Text></Pressable>
       </View>
-      <Pressable style={({pressed}) => [styles.authButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed ? {backgroundColor:colors.black3} : {}]}><Text style={styles.authText}>Sign Out</Text></Pressable>
+      <Pressable onPress={() => navigation.navigate("SignIn")} style={({pressed}) => [styles.authButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed ? {backgroundColor:colors.black3} : {}]}><Text style={styles.authText}>Sign Out</Text></Pressable>
     </View>
   )
 }
@@ -43,6 +51,17 @@ const Drawer = createDrawerNavigator<ComponentProps>();
 
 export default function App() {
   const scheme = useColorScheme()
+  const [user, setUser] = useState<DecodedToken | null>(null)
+  useEffect(() => {
+    async function parseUserObj(){
+      const data = await AsyncStorage.getItem("user")
+      if(data){
+        console.log(user)
+        setUser(JSON.parse(data))
+      }
+    }
+    parseUserObj()
+  },[])
   return (
     <SafeAreaView style={{flex:1}}>
     <NavigationContainer>
@@ -60,11 +79,12 @@ export default function App() {
         },
         title:''
       }} 
-      drawerContent={props => drawerContent(props, scheme === 'dark')} >
+      drawerContent={props =>drawerContent(props, scheme === 'dark', user)} >
         <Drawer.Screen name="Home" component={Home}/>
         <Drawer.Screen options={{unmountOnBlur:true}} name="ProductDetails" component={ProductDetails}/>
         <Drawer.Screen options={{unmountOnBlur:true}} name="Search" component={Search}/>
         <Drawer.Screen name="SignIn" component={SignIn}/>
+        <Drawer.Screen options={{unmountOnBlur:true}} name="Cart" component={Cart}/>
       </Drawer.Navigator>
     </NavigationContainer>
     </SafeAreaView>

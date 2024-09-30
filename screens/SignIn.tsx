@@ -5,6 +5,8 @@ import { Formik } from 'formik'
 import * as yup from 'yup'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { useNavigation } from '@react-navigation/native'
+import { jwtDecode, JwtPayload } from "jwt-decode";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const dvw = Dimensions.get('window').width
 const dvh = Dimensions.get('window').height
@@ -61,7 +63,22 @@ export default function Signin() {
         }
     }
     const navigation = useNavigation()
-    async function signIn(email:string, password:string){
+    async function signIn(username:string, password:string){
+        const req = await fetch(`${process.env.URL}/api/mobileAuth`, {
+            method:"POST",
+            body:JSON.stringify({username, password})
+        })
+        const data = await req.json()
+        const decoded: DecodedToken = jwtDecode(data.session)
+
+        await AsyncStorage.setItem("session", data.session)
+        await AsyncStorage.setItem("user", JSON.stringify({
+            _id:decoded._id,
+            username:decoded.username,
+            email:decoded.email,
+            profilePictureUrl:decoded.profilePictureUrl
+        }))
+        
         // @ts-ignore
         navigation.navigate("Home")
     }
@@ -122,7 +139,7 @@ return (
                         secureTextEntry={true}
                     />
                 </View>
-                <Pressable onPress={() => signIn('', '')} style={({pressed}) => [styles.signInBtn, pressed && {backgroundColor:colors.darkerOrange}]}>
+                <Pressable onPress={() => handleSubmit()} style={({pressed}) => [styles.signInBtn, pressed && {backgroundColor:colors.darkerOrange}]}>
                     <Text style={styles.signInBtnText}>Sign In</Text>
                 </Pressable>
             </Animated.View>

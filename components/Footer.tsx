@@ -19,8 +19,8 @@ return (
         <Pressable onPress={() => navigation.navigate("Search")} style={({pressed}) => [styles.buttons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}, currentScreen === 'Search' && darkMode ? {backgroundColor:colors.transparentWhite} : currentScreen === "Search" && {backgroundColor:colors.black3}]}>
             <Image style={[styles.icons]} source={darkMode ? require("../images/magnifyingGlass.png") : require('../images/magnifyingGlassBlack.png')}/>
         </Pressable>
-
-        <Pressable style={({pressed}) => [styles.buttons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
+        {/* @ts-ignore */}
+        <Pressable onPress={() => navigation.navigate("Cart")} style={({pressed}) => [styles.buttons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}, currentScreen === 'Cart' && darkMode ? {backgroundColor:colors.transparentWhite} : currentScreen === 'Cart' && {backgroundColor:colors.black3}]}>
             <Image style={styles.icons} source={darkMode ? require("../images/cart.png") : require("../images/cartBlack.png")}/>
         </Pressable>
 

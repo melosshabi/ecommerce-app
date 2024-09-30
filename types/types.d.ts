@@ -27,4 +27,19 @@ type ComponentProps = {
     SignIn:undefined,
     SignUp:undefined,
     Search:undefined,
+    Cart:undefined
+}
+type DecodedToken = {
+    _id:string,
+    username:string,
+    email:string,
+    profilePictureUrl:string,
+}
+type CartItem = {
+    productName:string,
+    productImage:string,
+    manufacturer:string,
+    productPrice:number,
+    desiredQuantity:number,
+    dateAddedToCart:Date
 }

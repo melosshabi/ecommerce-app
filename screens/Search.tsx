@@ -6,7 +6,6 @@ import { FlatList } from 'react-native-gesture-handler'
 import Product from '../components/Product'
 import { useNavigation } from '@react-navigation/native'
 
-const dvh = Dimensions.get("screen").height
 export default function Search() {
     const navigation = useNavigation()
     const darkMode = useColorScheme() === 'dark'
@@ -39,7 +38,7 @@ export default function Search() {
 
 const styles = StyleSheet.create({
     searchPage:{
-        height:dvh - dvh / 7.5,
+        height:'100%',
         justifyContent:'space-between',
         alignItems:'center',
     },
