@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
         borderRadius:6,
     },
     actionButtonIcons:{
-        transform:[{scale:.4}]
+        width:35,
+        height:35,
     }
 })

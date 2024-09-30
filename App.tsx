@@ -7,6 +7,7 @@ import { Dimensions, Image, Pressable, SafeAreaView, StyleSheet, Text, useColorS
 import colors from './lib/colors';
 import Home from './screens/Home';
 import ProductDetails from './screens/ProductDetails';
+import Search from './screens/Search';
 
 const dvh = Dimensions.get('screen').height
 function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean){
@@ -18,30 +19,20 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
       </View>
       <View style={styles.options}>
           <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
-            <View style={styles.iconWrappers}>
               <Image source={darkMode ? require("./images/user.png") : require('./images/userBlack.png')} style={styles.optionIcons}/>
-            </View>
               <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Account</Text>
           </Pressable>
           <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
-            <View style={styles.iconWrappers}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/cart.png") : require("./images/cartBlack.png")}/>
-            </View>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Cart</Text></Pressable>
           <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
-            <View style={styles.iconWrappers}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/heart.png") : require("./images/heartBlack.png")}/>
-            </View>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Wishlist</Text></Pressable>
           <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
-            <View style={styles.iconWrappers}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/orders.png") : require("./images/ordersBlack.png")}/>
-            </View>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Orders</Text></Pressable>
           <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
-            <View style={styles.iconWrappers}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/products.png") : require('./images/productsBlack.png')}/>
-            </View>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Products</Text></Pressable>
       </View>
       <Pressable style={({pressed}) => [styles.authButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed ? {backgroundColor:colors.black3} : {}]}><Text style={styles.authText}>Sign Out</Text></Pressable>
@@ -55,7 +46,7 @@ export default function App() {
   return (
     <SafeAreaView style={{flex:1}}>
     <NavigationContainer>
-      <Drawer.Navigator initialRouteName='Home' screenOptions={{drawerPosition:'right', 
+      <Drawer.Navigator backBehavior="history" initialRouteName='Home' screenOptions={{drawerPosition:'right', 
         headerRight: () => <HamburgerButton/>, 
         headerStyle:{
           backgroundColor: scheme === 'dark' ? colors.black : 'white',
@@ -70,9 +61,10 @@ export default function App() {
         title:''
       }} 
       drawerContent={props => drawerContent(props, scheme === 'dark')} >
-        <Drawer.Screen name="SignIn" component={SignIn}/>
         <Drawer.Screen name="Home" component={Home}/>
         <Drawer.Screen options={{unmountOnBlur:true}} name="ProductDetails" component={ProductDetails}/>
+        <Drawer.Screen options={{unmountOnBlur:true}} name="Search" component={Search}/>
+        <Drawer.Screen name="SignIn" component={SignIn}/>
       </Drawer.Navigator>
     </NavigationContainer>
     </SafeAreaView>
@@ -120,8 +112,8 @@ const styles = StyleSheet.create({
     width:'100%',
     flexDirection:'row',
     alignItems:'center',
-    marginVertical:5,
-    paddingVertical:4,
+    marginVertical:1,
+    paddingVertical:14,
   },
   iconWrappers:{
     width:50,
@@ -130,7 +122,10 @@ const styles = StyleSheet.create({
     alignItems:'center',
   },
   optionIcons:{
-    transform:[{scale:.3}],
+    width:30,
+    height:30,
+    marginRight:25,
+    marginLeft:10
   },
   authButtons:{
     marginBottom:20,

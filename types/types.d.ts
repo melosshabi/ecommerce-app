@@ -25,5 +25,6 @@ type ComponentProps = {
         _id:string
     }
     SignIn:undefined,
-    SignUp:undefined
+    SignUp:undefined,
+    Search:undefined,
 }

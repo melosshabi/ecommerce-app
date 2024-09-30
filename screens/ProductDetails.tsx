@@ -1,5 +1,5 @@
-import { Dimensions, Image, Keyboard, NativeSyntheticEvent, Pressable, StyleSheet, Text, TextInput, TextInputChangeEventData, useColorScheme, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { Dimensions, Image, Keyboard, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, ScrollView } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
 import { DrawerScreenProps } from '@react-navigation/drawer'
 import {URL} from "@env"
 import colors from '../lib/colors'
@@ -8,11 +8,12 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming, } from 'react-n
 
 type ProductDetails = DrawerScreenProps<ComponentProps, 'ProductDetails'>
 const dvh = Dimensions.get("screen").height
-const dvw = Dimensions.get("screen").width
 export default function ProductDetails({route}:ProductDetails) {
     const darkMode = useColorScheme() === 'dark'
     const [productData, setProductData] = useState<Product>()
     const [imagesCount, setImagesCount] = useState(0)
+    const [desiredQuantity, setDesiredQuantity] = useState("1")
+    let quantity = '1'
     const pageTranslate = useSharedValue(0)
     const pageTranslateStyle = useAnimatedStyle(() => ({
       transform:[{translateY:pageTranslate.value}]
@@ -34,7 +35,6 @@ export default function ProductDetails({route}:ProductDetails) {
       })
     }, [])
 
-    const [desiredQuantity, setDesiredQuantity] = useState(1)
     const picture1Opacity = useSharedValue(1)
     const [activeImageIndex, setActiveImageIndex] = useState(0)
     const picture1AnimStyle = useAnimatedStyle(() => {
@@ -48,7 +48,7 @@ export default function ProductDetails({route}:ProductDetails) {
         opacity:picture2Opacity.value
       }
     })
-    const picture3Opacity = useSharedValue(1)
+    const picture3Opacity = useSharedValue(0)
     const picture3AnimStyle = useAnimatedStyle(() => {
       return {
         opacity:picture3Opacity.value
@@ -138,6 +138,7 @@ export default function ProductDetails({route}:ProductDetails) {
   return (
     
     <Animated.View style={[styles.productPage, pageTranslateStyle, darkMode && {backgroundColor:colors.black}]}>
+      <ScrollView>
       <View>
         <View style={styles.slider}>
           <Pressable onPress={() => changeVisibleImage(activeImageIndex - 1)} style={({pressed}) => [styles.arrowButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
@@ -163,8 +164,12 @@ export default function ProductDetails({route}:ProductDetails) {
         <Text style={[styles.manufacturer, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.manufacturer}</Text>
         <Text style={[styles.price, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.productPrice}€</Text>
         <Text style={[styles.stock, darkMode ? {color:'white'} : {color:'black'}]}>In Stock: {productData?.quantity}</Text>
-        <AInput onBlur={() => handleQuantityInputFocus(false)} onFocus={() => handleQuantityInputFocus(true)} style={[styles.quantityInput, inputBorderAnim]} keyboardType='number-pad' value={desiredQuantity.toString()}/>
+        <AInput onBlur={() => handleQuantityInputFocus(false)} onFocus={() => handleQuantityInputFocus(true)} style={[styles.quantityInput, inputBorderAnim]} keyboardType='number-pad' defaultValue={desiredQuantity} onChangeText={text => quantity = text} onEndEditing={() => setDesiredQuantity(quantity)}/>
+          <Pressable style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}><Text style={styles.productButtonsText}>Add To Cart</Text><Image style={styles.buttonIcons} source={require("../images/cart.png")}/></Pressable>
+          <Pressable style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}><Text style={styles.productButtonsText}>Add To Wishlist</Text><Image style={styles.buttonIcons} source={require('../images/heart.png')}/></Pressable>
+          <Pressable style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}><Text style={styles.productButtonsText}>Order Now</Text><Image style={styles.buttonIcons} source={require("../images/checkmark.png")}/></Pressable>
       </View>
+      </ScrollView>
       <Footer currentScreen={undefined}/>
     </Animated.View>
   )
@@ -252,6 +257,28 @@ const styles = StyleSheet.create({
     borderBottomWidth:1,
     textAlign:'center',
     fontSize:15,
-    width:'15%'
+    width:'15%',
+    marginBottom:15
+  },
+  productButtons:{
+    width:'60%',
+    marginVertical:5,
+    backgroundColor:colors.orange,
+    paddingVertical:15,
+    paddingHorizontal:25,
+    borderRadius:8,
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'center'
+  },
+  productButtonsText:{
+    fontSize:20,
+    color:'white',
+    fontFamily:"WorkSans-Medium"
+  },
+  buttonIcons:{
+    width:25,
+    height:25,
+    marginLeft:5,
   }
 })

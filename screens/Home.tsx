@@ -1,4 +1,4 @@
-import { Dimensions, StyleSheet, Text, useColorScheme, View, FlatList, Image, Pressable } from 'react-native'
+import { Dimensions, StyleSheet, useColorScheme, View, FlatList, Image, Pressable } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import {URL} from "@env"
 import colors from '../lib/colors'
