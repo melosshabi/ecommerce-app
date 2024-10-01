@@ -4,7 +4,6 @@ import colors from '../lib/colors'
 import { useNavigation } from '@react-navigation/native'
 
 const screen = Dimensions.get("screen")
-const dvh = screen.height
 const dvw = screen.width
 export default function Footer({currentScreen}:Footer) {
     const darkMode = useColorScheme() == 'dark'

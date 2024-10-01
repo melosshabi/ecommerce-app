@@ -24,8 +24,14 @@ type ComponentProps = {
     ProductDetails:{
         _id:string
     }
-    SignIn:undefined,
-    SignUp:undefined,
+    SignIn:{
+        user:DecodedToken | null,
+        setUser:React.Dispatch<React.SetStateAction<DecodedToken | null>>
+    },
+    SignUp:{
+        user:DecodedToken | null,
+        setUser:React.Dispatch<React.SetStateAction<DecodedToken | null>>
+    },
     Search:undefined,
     Cart:undefined
 }

@@ -5,15 +5,14 @@ import { Formik } from 'formik'
 import * as yup from 'yup'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { useNavigation } from '@react-navigation/native'
-import { jwtDecode, JwtPayload } from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DrawerScreenProps } from '@react-navigation/drawer'
 
 const dvw = Dimensions.get('window').width
 const dvh = Dimensions.get('window').height
-type SignInParams = DrawerScreenProps<ComponentProps, "SignIn">
-
-export default function Signin({route}:SignInParams) {
+type SignUpParams = DrawerScreenProps<ComponentProps, 'SignUp'>
+export default function Signup({route}:SignUpParams) {
     const scheme = useColorScheme()
 
     const [formErrors, setFormErrors] = useState({
@@ -27,6 +26,12 @@ export default function Signin({route}:SignInParams) {
             borderColor:usernameBorderColor.value,
         }
     }, [])
+    const emailBorderColor = useSharedValue('white')
+    const emailBorderAnimStyle = useAnimatedStyle(() => {
+        return{
+            borderColor:emailBorderColor.value
+        }
+    })
     const passwordBorderColor = useSharedValue('white')
     const passwordBorderAnimStyle = useAnimatedStyle(() => {
         return {
@@ -50,10 +55,12 @@ export default function Signin({route}:SignInParams) {
             formMarginBottom.value = withTiming(50, {duration:100})
         })
     }, [])
+    const emailInputRef = useRef(null)
     const passwordInputRef = useRef(null)
-    const signInSchema = yup.object().shape({
-        username:yup.string(),
-        password:yup.string().min(8, "Incorrect password")
+    const signUpSchema = yup.object().shape({
+        username:yup.string().min(4, "Username needs to be at least 4 characters long"),
+        email:yup.string().email("Invalid Email"),
+        password:yup.string().min(8, "Password needs to be at least 8 characters long")
     })
     function handleBorderColorChange(field:string, focused:boolean){
         'worklet'
@@ -61,18 +68,33 @@ export default function Signin({route}:SignInParams) {
             usernameBorderColor.value = withTiming(colors.orange, {duration:150})
         }else if(!focused && field === 'username'){
             usernameBorderColor.value = withTiming('white', {duration:150})
+        }else if(focused && field == 'email') {
+            emailBorderColor.value = withTiming(colors.orange, {duration:150})
+        }else if(!focused && field == 'email'){
+            emailBorderColor.value = withTiming('white', {duration:150})
         }else if(focused && field === 'password'){
             passwordBorderColor.value = withTiming(colors.orange, {duration:150})
         }else if(!focused && field === 'password'){
             passwordBorderColor.value = withTiming('white', {duration:150})
         }
-    }    
-    async function signIn(username:string, password:string){
-        const req = await fetch(`${process.env.URL}/api/mobileAuth`, {
+    }
+    const [authErr, setAuthErr] = useState("")
+    async function signUp(username:string, email:string, password:string){
+        // const req = await fetch(`${process.env.URL}/api/mobileAuth`, {
+        //     method:"POST",
+        //     body:JSON.stringify({username, password})
+        // })
+        const req = await fetch('http://10.0.2.2:3000/api/signup', {
             method:"POST",
-            body:JSON.stringify({username, password})
+            headers:{
+                "Mobile":"true"
+            },
+            body:JSON.stringify({username, email, password})
         })
         const data = await req.json()
+        if(req.status === 400){
+            setAuthErr(data.errorMessage)
+        }
         const decoded: DecodedToken = jwtDecode(data.session)
 
         await AsyncStorage.setItem("session", data.session)
@@ -93,15 +115,15 @@ export default function Signin({route}:SignInParams) {
     }
 return (
     <View style={[styles.signInScreen, {backgroundColor: scheme ? colors.black : 'white'}]}>
-        <Text style={[styles.title]}>Welcome Back!</Text>
+        <Text style={[styles.title]}>Welcome!</Text>
         <Image style={styles.backgroundImage} blurRadius={10} source={require('../images/decoration.jpg')}/>
         <View style={styles.imageForeground}></View>
         <Formik
-            initialValues={{username:'', password:''}}
-            validationSchema={signInSchema}
-            onSubmit={values => signIn(values.username, values.password)}
+            initialValues={{username:'', email:'', password:''}}
+            validationSchema={signUpSchema}
+            onSubmit={values => signUp(values.username, values.email, values.password)}
         >
-            {({handleChange, handleBlur, values, handleSubmit}) => (
+            {({handleChange, handleBlur, values, errors, handleSubmit}) => (
             <Animated.View style={[styles.form, formMarginBottomStyle]} >
                 {/* Username */}
                 <View style={styles.inputWrappers}>
@@ -121,6 +143,30 @@ return (
                         autoCapitalize='none'
                         style={[styles.inputs, usernameBorderAnimStyle]}
                         onFocus={() => handleBorderColorChange('username', true)}
+                        returnKeyType="next"
+                        // @ts-ignore
+                        onSubmitEditing={() => emailInputRef.current.focus()}
+                    />
+                </View>
+                {/* Email */}
+                <View style={styles.inputWrappers}>
+                    <Image source={require('../images/at.png')} style={styles.inputIcons}/>
+                    <ATextInput
+                        ref={emailInputRef}
+                        onChangeText={handleChange('email')}
+                        onChange={() => {
+                            if(formErrors.username) setFormErrors(prev => ({...prev, username:''}))
+                        }}
+                        onBlur={() => {
+                            handleBorderColorChange('email', false)
+                            handleBlur('email')
+                        }}
+                        value={values.email}
+                        placeholder='Email'
+                        placeholderTextColor='white'
+                        autoCapitalize='none'
+                        style={[styles.inputs, emailBorderAnimStyle]}
+                        onFocus={() => handleBorderColorChange('email', true)}
                         returnKeyType="next"
                         // @ts-ignore
                         onSubmitEditing={() => passwordInputRef.current.focus()}
@@ -148,8 +194,12 @@ return (
                         secureTextEntry={true}
                     />
                 </View>
+                {errors.username && <Text style={styles.error}>{errors.username}</Text>}
+                {errors.email && <Text style={styles.error}>{errors.email}</Text>}
+                {errors.password && <Text style={styles.error}>{errors.password}</Text>}
+                {authErr && <Text style={styles.error}>{authErr}</Text>}
                 <Pressable onPress={() => handleSubmit()} style={({pressed}) => [styles.signInBtn, pressed && {backgroundColor:colors.darkerOrange}]}>
-                    <Text style={styles.signInBtnText}>Sign In</Text>
+                    <Text style={styles.signInBtnText}>Sign Up</Text>
                 </Pressable>
             </Animated.View>
             )}
@@ -222,5 +272,10 @@ const styles = StyleSheet.create({
         fontFamily:"WorkSans-Medium",
         color:'white',
         fontSize:20
+    },
+    error:{
+        color:'red',
+        fontFamily:'WorkSans-Medium',
+        fontSize:15
     }
 })

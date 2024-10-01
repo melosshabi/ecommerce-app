@@ -9,11 +9,30 @@ import Home from './screens/Home';
 import ProductDetails from './screens/ProductDetails';
 import Search from './screens/Search';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import Cart from './screens/Cart';
+import Signup from './screens/SignUp';
+import { parseUserObj } from './types/lib';
 
 const dvh = Dimensions.get('screen').height
-function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean, user:DecodedToken | null){
+function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean){
+  const [user, setUser] = useState<DecodedToken | null>(null)
+  useEffect(() => {
+    async function updateUserObj(){
+      const data = await AsyncStorage.getItem("user")
+      if(data){
+        setUser(JSON.parse(data))
+      }
+    }
+    updateUserObj()
+  },[])
+  async function logOut(){
+    setUser(null)
+    await AsyncStorage.removeItem('user')
+    await AsyncStorage.removeItem('token')
+    // navigation.navigate("")
+    navigation.closeDrawer()
+  }
   return (
     <View style={[styles.drawer, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
       <View style={styles.avatarWrapper}>
@@ -43,51 +62,47 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
               <Image style={styles.optionIcons} source={darkMode ? require("./images/products.png") : require('./images/productsBlack.png')}/>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Products</Text></Pressable>
       </View>
-      <Pressable onPress={() => navigation.navigate("SignIn")} style={({pressed}) => [styles.authButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed ? {backgroundColor:colors.black3} : {}]}><Text style={styles.authText}>Sign Out</Text></Pressable>
+      {
+        user ? <Pressable onPress={() => logOut()} style={({pressed}) => [styles.authButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed ? {backgroundColor:colors.black3} : {}]}><Text style={styles.authText}>Sign Out</Text></Pressable> 
+        : <View style={styles.authButtonsWrapper}>
+          <Pressable onPress={() => navigation.navigate("SignIn", {user, setUser})} style={({pressed}) => [styles.authButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed ? {backgroundColor:colors.black3} : {}]}><Text style={styles.authText}>Sign In</Text></Pressable> 
+          <Pressable onPress={() => navigation.navigate("SignUp", {user, setUser})} style={({pressed}) => [styles.authButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed ? {backgroundColor:colors.black3} : {}]}><Text style={styles.authText}>Sign Up</Text></Pressable> 
+        </View>
+      }
     </View>
   )
 }
 const Drawer = createDrawerNavigator<ComponentProps>();
-
 export default function App() {
   const scheme = useColorScheme()
-  const [user, setUser] = useState<DecodedToken | null>(null)
-  useEffect(() => {
-    async function parseUserObj(){
-      const data = await AsyncStorage.getItem("user")
-      if(data){
-        console.log(user)
-        setUser(JSON.parse(data))
-      }
-    }
-    parseUserObj()
-  },[])
   return (
-    <SafeAreaView style={{flex:1}}>
-    <NavigationContainer>
-      <Drawer.Navigator backBehavior="history" initialRouteName='Home' screenOptions={{drawerPosition:'right', 
-        headerRight: () => <HamburgerButton/>, 
-        headerStyle:{
-          backgroundColor: scheme === 'dark' ? colors.black : 'white',
-          elevation:5,
-          shadowColor: scheme === 'dark' ? 'white' : colors.black
-        },
-        headerLeft:() => <Image style={styles.cartLogo} source={require("./images/cartLogo.png")}/>,
-        headerTitleStyle:{
-          color: scheme === 'dark' ? 'white' : colors.black,
-          
-        },
-        title:''
-      }} 
-      drawerContent={props =>drawerContent(props, scheme === 'dark', user)} >
-        <Drawer.Screen name="Home" component={Home}/>
-        <Drawer.Screen options={{unmountOnBlur:true}} name="ProductDetails" component={ProductDetails}/>
-        <Drawer.Screen options={{unmountOnBlur:true}} name="Search" component={Search}/>
-        <Drawer.Screen name="SignIn" component={SignIn}/>
-        <Drawer.Screen options={{unmountOnBlur:true}} name="Cart" component={Cart}/>
-      </Drawer.Navigator>
-    </NavigationContainer>
-    </SafeAreaView>
+      <SafeAreaView style={{flex:1}}>
+        <NavigationContainer>
+          <Drawer.Navigator backBehavior="history" initialRouteName='Home' screenOptions={{drawerPosition:'right', 
+            headerRight: () => <HamburgerButton/>, 
+            headerStyle:{
+              backgroundColor: scheme === 'dark' ? colors.black : 'white',
+              elevation:5,
+              shadowColor: scheme === 'dark' ? 'white' : colors.black
+            },
+            headerLeft:() => <Image style={styles.cartLogo} source={require("./images/cartLogo.png")}/>,
+            headerTitleStyle:{
+              color: scheme === 'dark' ? 'white' : colors.black,
+
+            },
+            title:'',
+            
+          }} 
+          drawerContent={props =>drawerContent(props, scheme === 'dark')} >
+            <Drawer.Screen name="Home" component={Home}/>
+            <Drawer.Screen options={{unmountOnBlur:true}} name="ProductDetails" component={ProductDetails}/>
+            <Drawer.Screen options={{unmountOnBlur:true}} name="Search" component={Search}/>
+            <Drawer.Screen name="SignIn" options={{unmountOnBlur:true}} component={SignIn}/>
+            <Drawer.Screen name="SignUp" options={{unmountOnBlur:true}} component={Signup}/>
+            <Drawer.Screen options={{unmountOnBlur:true}} name="Cart" component={Cart}/>
+          </Drawer.Navigator>
+        </NavigationContainer>
+      </SafeAreaView>
   );
 }
 
@@ -146,6 +161,11 @@ const styles = StyleSheet.create({
     height:30,
     marginRight:25,
     marginLeft:10
+  },
+  authButtonsWrapper:{
+    width:'100%',
+    flexDirection:'row',
+    justifyContent:'space-between'
   },
   authButtons:{
     marginBottom:20,
