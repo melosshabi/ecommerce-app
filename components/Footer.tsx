@@ -47,7 +47,6 @@ const styles = StyleSheet.create({
         borderRadius:8,
     },
     icons:{
-        // transform:[{scale:.47}]
         width:35,
         height:35
     }

@@ -42,10 +42,12 @@ type DecodedToken = {
     profilePictureUrl:string,
 }
 type CartItem = {
+    _id:string,
     productName:string,
     productImage:string,
     manufacturer:string,
     productPrice:number,
+    availableQuantity:number,
     desiredQuantity:number,
     dateAddedToCart:Date
 }

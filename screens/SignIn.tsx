@@ -33,22 +33,10 @@ export default function Signin({route}:SignInParams) {
             borderColor: passwordBorderColor.value
         }
     })
-    const formMarginBottom = useSharedValue(50) 
-    const formMarginBottomStyle = useAnimatedStyle(() => {
-        return {
-            marginBottom:formMarginBottom.value
-        }
-    })
     const navigation = useNavigation()
     useEffect(() => {
         // @ts-ignore
-        if(route.params.user) navigation.navigate("Home")
-        Keyboard.addListener('keyboardDidShow', () => {
-            formMarginBottom.value = withTiming(320, {duration:100})
-        })
-        Keyboard.addListener('keyboardDidHide', () => {
-            formMarginBottom.value = withTiming(50, {duration:100})
-        })
+        // I have to use type any in this case since the KeyboardEvent type doesn't include endCoordinates
     }, [])
     const passwordInputRef = useRef(null)
     const signInSchema = yup.object().shape({
@@ -102,7 +90,7 @@ return (
             onSubmit={values => signIn(values.username, values.password)}
         >
             {({handleChange, handleBlur, values, handleSubmit}) => (
-            <Animated.View style={[styles.form, formMarginBottomStyle]} >
+            <Animated.View style={[styles.form]} >
                 {/* Username */}
                 <View style={styles.inputWrappers}>
                     <Image source={require('../images/userIcon.png')} style={styles.inputIcons}/>
@@ -160,7 +148,7 @@ return (
 
 const styles = StyleSheet.create({
     signInScreen:{
-        height:dvh - dvh / 14,
+        height:'100%',
         alignItems:'center',
         justifyContent:'flex-end'
     },

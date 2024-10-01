@@ -31,29 +31,17 @@ export default function Signup({route}:SignUpParams) {
         return{
             borderColor:emailBorderColor.value
         }
-    })
+    }, [])
     const passwordBorderColor = useSharedValue('white')
     const passwordBorderAnimStyle = useAnimatedStyle(() => {
         return {
             borderColor: passwordBorderColor.value
         }
-    })
-    const formMarginBottom = useSharedValue(50) 
-    const formMarginBottomStyle = useAnimatedStyle(() => {
-        return {
-            marginBottom:formMarginBottom.value
-        }
-    })
+    }, [])
     const navigation = useNavigation()
     useEffect(() => {
         // @ts-ignore
         if(route.params.user) navigation.navigate("Home")
-        Keyboard.addListener('keyboardDidShow', () => {
-            formMarginBottom.value = withTiming(320, {duration:100})
-        })
-        Keyboard.addListener('keyboardDidHide', () => {
-            formMarginBottom.value = withTiming(50, {duration:100})
-        })
     }, [])
     const emailInputRef = useRef(null)
     const passwordInputRef = useRef(null)
@@ -84,7 +72,7 @@ export default function Signup({route}:SignUpParams) {
         //     method:"POST",
         //     body:JSON.stringify({username, password})
         // })
-        const req = await fetch('http://10.0.2.2:3000/api/signup', {
+        const req = await fetch(`${process.env.URL}/api/mobileAuth`, {
             method:"POST",
             headers:{
                 "Mobile":"true"
@@ -114,7 +102,7 @@ export default function Signup({route}:SignUpParams) {
         navigation.navigate("Home")
     }
 return (
-    <View style={[styles.signInScreen, {backgroundColor: scheme ? colors.black : 'white'}]}>
+    <View style={[styles.signUpScreen, {backgroundColor: scheme ? colors.black : 'white'}]}>
         <Text style={[styles.title]}>Welcome!</Text>
         <Image style={styles.backgroundImage} blurRadius={10} source={require('../images/decoration.jpg')}/>
         <View style={styles.imageForeground}></View>
@@ -124,7 +112,7 @@ return (
             onSubmit={values => signUp(values.username, values.email, values.password)}
         >
             {({handleChange, handleBlur, values, errors, handleSubmit}) => (
-            <Animated.View style={[styles.form, formMarginBottomStyle]} >
+            <View style={[styles.form]} >
                 {/* Username */}
                 <View style={styles.inputWrappers}>
                     <Image source={require('../images/userIcon.png')} style={styles.inputIcons}/>
@@ -199,9 +187,9 @@ return (
                 {errors.password && <Text style={styles.error}>{errors.password}</Text>}
                 {authErr && <Text style={styles.error}>{authErr}</Text>}
                 <Pressable onPress={() => handleSubmit()} style={({pressed}) => [styles.signInBtn, pressed && {backgroundColor:colors.darkerOrange}]}>
-                    <Text style={styles.signInBtnText}>Sign Up</Text>
+                    <Text style={styles.signUpButtonText}>Sign Up</Text>
                 </Pressable>
-            </Animated.View>
+            </View>
             )}
             
         </Formik>
@@ -209,8 +197,8 @@ return (
 )}
 
 const styles = StyleSheet.create({
-    signInScreen:{
-        height:dvh - dvh / 14,
+    signUpScreen:{
+        height:'100%',
         alignItems:'center',
         justifyContent:'flex-end'
     },
@@ -238,7 +226,6 @@ const styles = StyleSheet.create({
     form:{
         width:dvw / 1.3,
         alignItems:'center',
-        marginBottom:70
     },
     inputWrappers:{
         width:'100%',
@@ -268,7 +255,7 @@ const styles = StyleSheet.create({
         elevation:4,
         marginTop:60
     },
-    signInBtnText:{
+    signUpButtonText:{
         fontFamily:"WorkSans-Medium",
         color:'white',
         fontSize:20
