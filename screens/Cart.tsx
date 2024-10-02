@@ -1,25 +1,21 @@
-import { StyleSheet, Text, View, Dimensions, useColorScheme, Image, TextInput, Pressable } from 'react-native'
+import { StyleSheet, Text, View, Dimensions, useColorScheme, Image, TextInput, Pressable, Keyboard, BackHandler } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Footer from '../components/Footer'
 import colors from '../lib/colors'
 import { FlatList } from 'react-native-gesture-handler'
-import Animated, { Easing, FadeInRight, FadeOutRight, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import Animated, { Easing, FadeIn, FadeInRight, FadeInUp, FadeOut, FadeOutRight, FadeOutUp, FlipOutXUp, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated'
 
 const dvw = Dimensions.get("screen").width
 export default function Cart() {
     const darkMode = useColorScheme() === 'dark'
-    const [user, setUser] = useState<DecodedToken | null>(null)
     const [cart, setCart] = useState<CartItem[]>([])
     useEffect(() => {
-        async function getUserObject(){
-            const data = await AsyncStorage.getItem("user")
+        async function getCartList(){
             const session = await AsyncStorage.getItem("session")
             if(!session){
                 return
             }
-            if(data){
-                setUser(JSON.parse(data))
                 const res = await fetch(`${process.env.URL}/api/editCart`, {
                     method:"GET",
                     headers:{
@@ -29,9 +25,8 @@ export default function Cart() {
                 })
                 const cartItems = await res.json()
                 setCart([...cartItems.cartProducts])
-            }
         }
-        getUserObject()
+        getCartList()
     },[])
     const [showQuantityError, setShowQuantityError] = useState(false)
     const errorProgressBarWidth = useSharedValue('100%')
@@ -95,37 +90,93 @@ export default function Cart() {
         }, 1000)
         setQuantityTimeout(timeout)
     }
+
+    const [deleteMode, setDeleteMode] = useState(false)
+    const [selectedProducts, setSelectedProducts] = useState<string[]>([])
+    const APressable = Animated.createAnimatedComponent(Pressable)
+    const buttonScale = useSharedValue(1)
+    const buttonScaleAnim = useAnimatedStyle(() => {
+        return {
+            transform:[{scale:buttonScale.value}]
+        }
+    })
+    function toggleDeleteMode(){
+        setDeleteMode(prev => !prev)
+        buttonScale.value = withTiming(!deleteMode ? .9 : 1, {duration:150})
+    }
+    function addOrRemoveProduct(_id:string){
+        if(selectedProducts.includes(_id)){
+            setSelectedProducts(prev => prev.filter(id => id !== _id))
+            return
+        }
+        setSelectedProducts(prev => [...prev, _id])
+    }
+    async function deleteCartItems(){
+        setDeleteMode(false)
+        buttonScale.value = withTiming(1, {duration:150})
+        const filteredProducts = cart.filter(product => !selectedProducts.includes(product._id))
+        setCart([...filteredProducts])
+        const session = await AsyncStorage.getItem("session")
+        await fetch(`${process.env.URL}/api/editCart`, {
+            method:"DELETE",
+            headers:{
+                'Mobile':'True',
+                "Authorization":`Bearer ${session}`
+            },
+            body:JSON.stringify({
+                itemsToRemove:[...selectedProducts]
+            })
+        })
+        setSelectedProducts([])
+    }
+    useEffect(() => {
+        BackHandler.addEventListener('hardwareBackPress', () => {
+            if(deleteMode){
+                buttonScale.value = withTiming(1, {duration:150})
+                setDeleteMode(false)
+            }
+            return true
+        })
+    },[])
 return (
     <>
         <View style={[styles.cartPage, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
                 <FlatList style={{width:dvw, height:'100%'}} contentContainerStyle={{alignItems:'center'}}
                     data={cart}
                     renderItem={({item}) => (
-                        <View style={[styles.product, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:6} : {backgroundColor:'white', shadowColor:'black', elevation:4}]}>
-                            <Image style={styles.productImage} source={{uri:item.productImage}}/>
-                            <View style={styles.productDataWrapper}>
-                                    <Text style={[styles.name, darkMode ? {color:'white'} : {color:'black'}]}>{item.productName}</Text>
-                                    <Text style={[styles.manufacturer, darkMode ? {color:'white'} : {color:'black'}]}>{item.manufacturer}</Text>
-                                <View style={styles.priceStockWrapper}>
-                                    <Text style={[styles.price, darkMode ? {color:'white'} : {color:'black'}]}>{item.productPrice}€</Text>
-                                    <View style={styles.stockWrapper}>
-                                        <Pressable onPress={() => updateQuantity(item._id, QuantityActions.dec, item.desiredQuantity, item.availableQuantity)} style={({pressed}) => [styles.quantityButtons, darkMode && pressed ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
-                                            <Image style={styles.stockIcons} source={darkMode ? require('../images/minus.png') : require("../images/minusBlack.png")}/>
-                                        </Pressable>
-                                        <TextInput style={[styles.quantityInput, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:4, color:'white'} : {backgroundColor:'white', shadowColor:'white', elevation:4, color:'black'}]} value={item.desiredQuantity.toString()} editable={false}></TextInput>
-                                        <Pressable onPress={() => updateQuantity(item._id, QuantityActions.inc, item.desiredQuantity, item.availableQuantity)} style={({pressed}) => [styles.quantityButtons, darkMode && pressed ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
-                                            <Image style={styles.stockIcons} source={darkMode ? require('../images/plus.png') : require("../images/plusBlack.png")}/>
-                                        </Pressable>
+                        <Animated.View style={buttonScaleAnim}>
+                            <Pressable onPress={() => addOrRemoveProduct(item._id)} onLongPress={toggleDeleteMode} style={[styles.product, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:6} : {backgroundColor:'white', shadowColor:'black', elevation:4}]}>
+                                <Image style={styles.productImage} source={{uri:item.productImage}}/>
+                                <View style={styles.productDataWrapper}>
+                                        <Text style={[styles.name, darkMode ? {color:'white'} : {color:'black'}]}>{item.productName}</Text>
+                                        <Text style={[styles.manufacturer, darkMode ? {color:'white'} : {color:'black'}]}>{item.manufacturer}</Text>
+                                    <View style={styles.priceStockWrapper}>
+                                        <Text style={[styles.price, darkMode ? {color:'white'} : {color:'black'}]}>{item.productPrice}€</Text>
+                                        <View style={styles.stockWrapper}>
+                                            <Pressable disabled={deleteMode} onPress={() => updateQuantity(item._id, QuantityActions.dec, item.desiredQuantity, item.availableQuantity)} style={({pressed}) => [styles.quantityButtons, darkMode && pressed ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
+                                                <Image style={styles.stockIcons} source={darkMode ? require('../images/minus.png') : require("../images/minusBlack.png")}/>
+                                            </Pressable>
+                                            <TextInput style={[styles.quantityInput, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:4, color:'white'} : {backgroundColor:'white', shadowColor:'white', elevation:4, color:'black'}]} value={item.desiredQuantity.toString()} editable={false}></TextInput>
+                                            <Pressable disabled={deleteMode} onPress={() => updateQuantity(item._id, QuantityActions.inc, item.desiredQuantity, item.availableQuantity)} style={({pressed}) => [styles.quantityButtons, darkMode && pressed ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
+                                                <Image style={styles.stockIcons} source={darkMode ? require('../images/plus.png') : require("../images/plusBlack.png")}/>
+                                            </Pressable>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                            {/* <Pressable style={styles.deleteButton}>
-                                <Image style={styles.trashIcon} source={darkMode ? require('../images/trash.png') : require("../images/trashBlack.png")}/>
-                            </Pressable> */}
-                        </View>
+                                {deleteMode &&
+                                    <Animated.View entering={FadeInUp} exiting={FadeOutUp} style={[styles.checkmarkWrapper, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
+                                        {selectedProducts.includes(item._id) &&<Animated.Image entering={FadeIn.duration(100)} exiting={FadeOut.duration(100)}  style={styles.checkmark} source={darkMode? require('../images/checkmark.png') : require("../images/checkmarkBlack.png")}/>}
+                                    </Animated.View>
+                                }
+                            </Pressable>
+                        </Animated.View>
                     )}
                 />
-
+            {selectedProducts.length > 0 && deleteMode &&
+                <APressable onPress={() => deleteCartItems()} entering={FadeInRight.duration(150)} exiting={FadeOutRight.duration(150)}  style={[styles.deleteButton, darkMode ? {borderColor:'white'} : {borderColor:'black'}]}>
+                    <Image style={styles.trashIcon} source={require("../images/trash.png")}/>
+                </APressable>
+            }
             <Footer currentScreen='Cart'/>
         </View>
         {showQuantityError && <Animated.View entering={FadeInRight} exiting={FadeOutRight} style={[styles.maxQuantityAlert, darkMode ? {backgroundColor:colors.black, borderColor:'white'} : {backgroundColor:'white', borderColor:'black'}]}>
@@ -200,15 +251,6 @@ const styles = StyleSheet.create({
         marginHorizontal:5,
         padding:5,
     },
-    deleteButton:{
-        position:'absolute',
-        right:5,
-        top:5,
-    },
-    trashIcon:{
-        width:30,
-        height:30,
-    },
     maxQuantityAlert:{
         width:'60%',
         borderWidth:1,
@@ -241,5 +283,34 @@ const styles = StyleSheet.create({
         position:'absolute',
         bottom:5,
         left:8
-    }
+    },
+    checkmarkWrapper:{
+        width:40,
+        height:40,
+        position:'absolute',
+        right:5,
+        top:5,
+        borderRadius:50,
+        borderColor:colors.orange,
+        borderWidth:1,
+        justifyContent:'center',
+        alignItems:'center'
+    },
+    checkmark:{
+        width:30,
+        height:30
+    },
+    deleteButton:{
+        position:'absolute',
+        right:10,
+        bottom:70,
+        borderWidth:1,
+        borderRadius:50,
+        padding:5,
+        backgroundColor:colors.orange
+    },
+    trashIcon:{
+        width:40,
+        height:40,
+    },
 })

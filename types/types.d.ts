@@ -40,6 +40,7 @@ type DecodedToken = {
     username:string,
     email:string,
     profilePictureUrl:string,
+    cartItemsCount:number
 }
 type CartItem = {
     _id:string,

@@ -1,5 +1,5 @@
-import {Dimensions, Image, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native'
-import React, { useState } from 'react'
+import {Dimensions, Image, Keyboard, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import Footer from '../components/Footer'
 import colors from '../lib/colors'
 import { FlatList } from 'react-native-gesture-handler'
@@ -15,9 +15,17 @@ export default function Search() {
     async function searchProduct(){
         const res = await fetch(`${process.env.URL}/api/searchProducts?userQuery=${query}`)
         const data = await res.json()
-        console.log(data)
         setProducts([...data.products])
     }
+    useEffect(() => {
+        // I have to use type any in this case since the KeyboardEvent type doesn't include endCoordinates
+        // Keyboard.addListener('keyboardDidShow', (e:any) => {
+        //     pageTranslate.value = withTiming(-e.endCoordinates.height, {duration:150})
+        // })
+        // Keyboard.addListener("keyboardDidHide", () => {
+        //     pageTranslate.value = withTiming(0, {duration:150})
+        // })
+    }, [])
   return (
     <View style={[styles.searchPage, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
         <View style={[styles.searchWrapper, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:4} : {backgroundColor:'white', shadowColor:"black", elevation:4}]}>

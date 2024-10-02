@@ -68,11 +68,7 @@ export default function Signup({route}:SignUpParams) {
     }
     const [authErr, setAuthErr] = useState("")
     async function signUp(username:string, email:string, password:string){
-        // const req = await fetch(`${process.env.URL}/api/mobileAuth`, {
-        //     method:"POST",
-        //     body:JSON.stringify({username, password})
-        // })
-        const req = await fetch(`${process.env.URL}/api/mobileAuth`, {
+        const req = await fetch(`${process.env.URL}/api/signup`, {
             method:"POST",
             headers:{
                 "Mobile":"true"
@@ -90,13 +86,15 @@ export default function Signup({route}:SignUpParams) {
             _id:decoded._id,
             username:decoded.username,
             email:decoded.email,
-            profilePictureUrl:decoded.profilePictureUrl
+            profilePictureUrl:decoded.profilePictureUrl,
+            cartItemsCount:decoded.cartItemsCount
         }))
         route.params.setUser({
             _id:decoded._id,
             username:decoded.username,
             email:decoded.email,
-            profilePictureUrl:decoded.profilePictureUrl
+            profilePictureUrl:decoded.profilePictureUrl,
+            cartItemsCount:decoded.cartItemsCount
         })
         // @ts-ignore
         navigation.navigate("Home")

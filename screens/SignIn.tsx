@@ -56,7 +56,7 @@ export default function Signin({route}:SignInParams) {
         }
     }    
     async function signIn(username:string, password:string){
-        const req = await fetch(`${process.env.URL}/api/mobileAuth`, {
+        const req = await fetch(`http://10.0.2.2:3000/api/mobileAuth`, {
             method:"POST",
             body:JSON.stringify({username, password})
         })
@@ -68,13 +68,15 @@ export default function Signin({route}:SignInParams) {
             _id:decoded._id,
             username:decoded.username,
             email:decoded.email,
-            profilePictureUrl:decoded.profilePictureUrl
+            profilePictureUrl:decoded.profilePictureUrl,
+            cartItemsCount:decoded.cartItemsCount
         }))
         route.params.setUser({
             _id:decoded._id,
             username:decoded.username,
             email:decoded.email,
-            profilePictureUrl:decoded.profilePictureUrl
+            profilePictureUrl:decoded.profilePictureUrl,
+            cartItemsCount:decoded.cartItemsCount
         })
         // @ts-ignore
         navigation.navigate("Home")
