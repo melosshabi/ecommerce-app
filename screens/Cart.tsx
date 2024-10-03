@@ -60,6 +60,18 @@ export default function Cart() {
                 errorProgressBarWidth.value = '100%'
             }, 3000)
             setErrorTimeout(errTimeout)
+            const session = await AsyncStorage.getItem("session")
+            await fetch(`${process.env.URL}/api/editCart`, {
+                method:"PATCH",
+                headers:{
+                    "Authorization": `Bearer ${session}`,
+                    "Mobile":"true"
+                },
+                body:JSON.stringify({
+                    productDocId:productId,
+                    quantity:availableQuantity
+                })
+            })
             return
         }
         if(action === QuantityActions.dec && currentDesiredQuantity - 1 === 0) return
@@ -87,7 +99,7 @@ export default function Cart() {
                     quantity:action === QuantityActions.inc ? currentDesiredQuantity += 1 : currentDesiredQuantity -= 1
                 })
             })
-        }, 1000)
+        }, 500)
         setQuantityTimeout(timeout)
     }
 
@@ -117,7 +129,7 @@ export default function Cart() {
         const filteredProducts = cart.filter(product => !selectedProducts.includes(product._id))
         setCart([...filteredProducts])
         const session = await AsyncStorage.getItem("session")
-        await fetch(`${process.env.URL}/api/editCart`, {
+        await fetch(`http://10.0.2.2:3000/api/editCart`, {
             method:"DELETE",
             headers:{
                 'Mobile':'True',
@@ -156,7 +168,7 @@ return (
                                             <Pressable disabled={deleteMode} onPress={() => updateQuantity(item._id, QuantityActions.dec, item.desiredQuantity, item.availableQuantity)} style={({pressed}) => [styles.quantityButtons, darkMode && pressed ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
                                                 <Image style={styles.stockIcons} source={darkMode ? require('../images/minus.png') : require("../images/minusBlack.png")}/>
                                             </Pressable>
-                                            <TextInput style={[styles.quantityInput, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:4, color:'white'} : {backgroundColor:'white', shadowColor:'white', elevation:4, color:'black'}]} value={item.desiredQuantity.toString()} editable={false}></TextInput>
+                                            <TextInput style={[styles.quantityInput, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:4, color:'white'} : {backgroundColor:'white', shadowColor:'black', elevation:4, color:'black'}]} value={item.desiredQuantity.toString()} editable={false}></TextInput>
                                             <Pressable disabled={deleteMode} onPress={() => updateQuantity(item._id, QuantityActions.inc, item.desiredQuantity, item.availableQuantity)} style={({pressed}) => [styles.quantityButtons, darkMode && pressed ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
                                                 <Image style={styles.stockIcons} source={darkMode ? require('../images/plus.png') : require("../images/plusBlack.png")}/>
                                             </Pressable>

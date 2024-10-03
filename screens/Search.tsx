@@ -35,6 +35,7 @@ export default function Search() {
         {products.length > 0 && <Text style={[styles.title, darkMode ? {color:'white'} : {color:'black'}]}>Search Results For: {query}</Text>}
         <FlatList 
             data={products}
+            style={{minWidth:'100%'}}
             numColumns={2}
             renderItem={({item}) => (
                 <Product _id={item._id} name={item.productName} picture={item.pictures[0]} price={item.productPrice}/>

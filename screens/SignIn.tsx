@@ -54,9 +54,11 @@ export default function Signin({route}:SignInParams) {
         }else if(!focused && field === 'password'){
             passwordBorderColor.value = withTiming('white', {duration:150})
         }
-    }    
+    }   
+    const [authInProgress, setAuthInProgress] = useState(false)
     async function signIn(username:string, password:string){
-        const req = await fetch(`http://10.0.2.2:3000/api/mobileAuth`, {
+        setAuthInProgress(true)
+        const req = await fetch(`${process.env.URL}/api/mobileAuth`, {
             method:"POST",
             body:JSON.stringify({username, password})
         })
@@ -138,8 +140,8 @@ return (
                         secureTextEntry={true}
                     />
                 </View>
-                <Pressable onPress={() => handleSubmit()} style={({pressed}) => [styles.signInBtn, pressed && {backgroundColor:colors.darkerOrange}]}>
-                    <Text style={styles.signInBtnText}>Sign In</Text>
+                <Pressable disabled={authInProgress} onPress={() => handleSubmit()} style={({pressed}) => [styles.signInBtn, pressed && {backgroundColor:colors.darkerOrange}, authInProgress && {opacity:.7}]}>
+                    <Text style={styles.signInBtnText}>{!authInProgress ? "Sign In" : "Signing In"}</Text>
                 </Pressable>
             </Animated.View>
             )}

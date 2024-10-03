@@ -2,8 +2,9 @@ import { Image, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-
 import React from 'react'
 import colors from '../lib/colors'
 import { useNavigation } from '@react-navigation/native'
+import { addToCart } from '../lib/lib'
 
-export default function Product({_id, picture, name, price}:ProductProps) {
+export default function Product({_id, picture, name, price, animationFunction}:ProductProps) {
     const darkMode = useColorScheme() === 'dark'
     const navigation = useNavigation()
 return (
@@ -13,7 +14,12 @@ return (
         <Text style={[styles.productText, darkMode ? {color:'white'} : {color:'black'}]}>{name}</Text>
         <Text style={[styles.productText, darkMode ? {color:'white'} : {color:'black'}]}>{price}€</Text>
         <View style={styles.actionButtonsWrapper}>
-            <Pressable style={({pressed}) => [styles.actionButtons, darkMode ? {backgroundColor:colors.transparentWhite} : !darkMode ? {backgroundColor:colors.black3} : {}, pressed && {opacity:.7}]}><Image style={styles.actionButtonIcons} source={darkMode ? require("../images/cart.png") : require("../images/cartBlack.png")}/></Pressable>
+            <Pressable onPress={async () => {
+                const added = await addToCart(_id, 1)
+                if(added){
+                    animationFunction()
+                }
+            }} style={({pressed}) => [styles.actionButtons, darkMode ? {backgroundColor:colors.transparentWhite} : !darkMode ? {backgroundColor:colors.black3} : {}, pressed && {opacity:.7}]}><Image style={styles.actionButtonIcons} source={darkMode ? require("../images/cart.png") : require("../images/cartBlack.png")}/></Pressable>
             <Pressable style={({pressed}) => [styles.actionButtons, darkMode ? {backgroundColor:colors.transparentWhite} : !darkMode ? {backgroundColor:colors.black3} : {}, pressed && {opacity:.7}]}><Image style={styles.actionButtonIcons} source={darkMode ? require("../images/heart.png") : require("../images/heartBlack.png")}/></Pressable>
         </View>
     </Pressable>

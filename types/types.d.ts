@@ -17,7 +17,8 @@ type ProductProps = {
     _id:string,
     picture:string,
     name:string,
-    price:number
+    price:number,
+    animationFunction:() => void
 }
 type ComponentProps = {
     Home:undefined,
@@ -33,7 +34,8 @@ type ComponentProps = {
         setUser:React.Dispatch<React.SetStateAction<DecodedToken | null>>
     },
     Search:undefined,
-    Cart:undefined
+    Cart:undefined,
+    Wishlist:undefined,
 }
 type DecodedToken = {
     _id:string,

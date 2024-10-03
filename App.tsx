@@ -9,10 +9,10 @@ import Home from './screens/Home';
 import ProductDetails from './screens/ProductDetails';
 import Search from './screens/Search';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, useContext, useEffect, useState } from 'react';
+import {useEffect, useState } from 'react';
 import Cart from './screens/Cart';
 import Signup from './screens/SignUp';
-import { parseUserObj } from './types/lib';
+import Wishlist from './screens/Wishlist';
 
 const dvh = Dimensions.get('screen').height
 function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean){
@@ -44,23 +44,26 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
           }
       </View>
       <View style={styles.options}>
-          <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
+          {user && <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image source={darkMode ? require("./images/user.png") : require('./images/userBlack.png')} style={styles.optionIcons}/>
               <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Account</Text>
-          </Pressable>
+          </Pressable>}
           <Pressable onPress={() => navigation.navigate('Cart')} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/cart.png") : require("./images/cartBlack.png")}/>
               <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Cart</Text>
           </Pressable>
-          <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
+          <Pressable onPress={() => navigation.navigate('cart')} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/heart.png") : require("./images/heartBlack.png")}/>
-            <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Wishlist</Text></Pressable>
+            <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Wishlist</Text>
+          </Pressable>
           <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/orders.png") : require("./images/ordersBlack.png")}/>
-            <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Orders</Text></Pressable>
-          <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
+            <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Orders</Text>
+          </Pressable>
+          {user && <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/products.png") : require('./images/productsBlack.png')}/>
-            <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Products</Text></Pressable>
+            <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Products</Text>
+          </Pressable>}
       </View>
       {
         user ? <Pressable onPress={() => logOut()} style={({pressed}) => [styles.authButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed ? {backgroundColor:colors.black3} : {}]}><Text style={styles.authText}>Sign Out</Text></Pressable> 
@@ -96,10 +99,11 @@ export default function App() {
           drawerContent={props =>drawerContent(props, scheme === 'dark')} >
             <Drawer.Screen name="Home" component={Home}/>
             <Drawer.Screen options={{unmountOnBlur:true}} name="ProductDetails" component={ProductDetails}/>
-            <Drawer.Screen options={{unmountOnBlur:true}} name="Search" component={Search}/>
+            <Drawer.Screen name="Search" component={Search}/>
             <Drawer.Screen name="SignIn" options={{unmountOnBlur:true}} component={SignIn}/>
             <Drawer.Screen name="SignUp" options={{unmountOnBlur:true}} component={Signup}/>
             <Drawer.Screen options={{unmountOnBlur:true}} name="Cart" component={Cart}/>
+            <Drawer.Screen options={{unmountOnBlur:true}} name="Wishlist" component={Wishlist}/>
           </Drawer.Navigator>
         </NavigationContainer>
       </SafeAreaView>

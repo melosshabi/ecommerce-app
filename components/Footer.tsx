@@ -1,28 +1,24 @@
-import { Dimensions, Image, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native'
+import { Dimensions, Image, Keyboard, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import colors from '../lib/colors'
 import { useNavigation } from '@react-navigation/native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const screen = Dimensions.get("screen")
 const dvw = screen.width
 export default function Footer({currentScreen}:Footer) {
     const darkMode = useColorScheme() == 'dark'
     const navigation = useNavigation()
-    const [cartItemsCount, setCartItemsCount] = useState<number | null>(null)
+    const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
     useEffect(() => {
-        async function updateCartCount(){
-            const stringUser = await AsyncStorage.getItem("user")
-            if(stringUser){
-                const user = JSON.parse(stringUser)
-                console.log(user)
-                setCartItemsCount(user.cartItemsCount)
-            }
-        }
-        updateCartCount()
+        Keyboard.addListener("keyboardDidShow", () => {
+            setIsKeyboardVisible(true)
+        })
+        Keyboard.addListener("keyboardDidHide", () => {
+            setIsKeyboardVisible(false)
+        })
     }, [])
 return (
-    <View style={[styles.footer, darkMode ? {backgroundColor:colors.black, shadowColor:'white', borderTopColor:colors.transparentWhite,} : {backgroundColor:'white', shadowColor:'black', borderTopColor:colors.black3,}]}>
+    <View style={[styles.footer, isKeyboardVisible ? {height:'12%'} : {height:'8%'}, darkMode ? {backgroundColor:colors.black, shadowColor:'white', borderTopColor:colors.transparentWhite,} : {backgroundColor:'white', shadowColor:'black', borderTopColor:colors.black3,}]}>
         {/* @ts-ignore */}
         <Pressable onPress={() => navigation.navigate("Home")} style={({pressed}) => [styles.buttons, {marginLeft:5}, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}, currentScreen === 'Home' && darkMode ? {backgroundColor:colors.transparentWhite} : currentScreen === "Home" && {backgroundColor:colors.black3}]}>
             <Image style={[styles.icons]} source={darkMode ? require("../images/home.png") : require('../images/homeBlack.png')}/>
@@ -33,7 +29,6 @@ return (
         </Pressable>
         {/* @ts-ignore */}
         <Pressable onPress={() => navigation.navigate("Cart")} style={({pressed}) => [styles.buttons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}, currentScreen === 'Cart' && darkMode ? {backgroundColor:colors.transparentWhite} : currentScreen === 'Cart' && {backgroundColor:colors.black3}]}>
-            {cartItemsCount && <View style={styles.cartItemCount}><Text style={styles.cartItemCountText}>{cartItemsCount}</Text></View>}
             <Image style={styles.icons} source={darkMode ? require("../images/cart.png") : require("../images/cartBlack.png")}/>
         </Pressable>
 
@@ -46,7 +41,6 @@ return (
 const styles = StyleSheet.create({
     footer:{
         width:dvw,
-        height:'8%',
         flexDirection:'row',
         elevation:4,
         justifyContent:'space-between',
@@ -64,21 +58,5 @@ const styles = StyleSheet.create({
     icons:{
         width:35,
         height:35
-    },
-    cartItemCount:{
-        position:'absolute',
-        backgroundColor:colors.orange,
-        width:25,
-        height:25,
-        top:0,
-        right:0,
-        zIndex:2,
-        borderRadius:50,
-        justifyContent:'center',
-        alignItems:'center'
-    },
-    cartItemCountText:{
-        fontSize:15,
-        color:'white'
     }
 })
