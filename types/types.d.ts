@@ -54,3 +54,10 @@ type CartItem = {
     desiredQuantity:number,
     dateAddedToCart:Date
 }
+type WishlistItem = {
+    _id:string,
+    productName:string,
+    manufacturer:string,
+    productPrice:number,
+    productImage:string
+}

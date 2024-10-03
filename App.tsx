@@ -52,7 +52,7 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
               <Image style={styles.optionIcons} source={darkMode ? require("./images/cart.png") : require("./images/cartBlack.png")}/>
               <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Cart</Text>
           </Pressable>
-          <Pressable onPress={() => navigation.navigate('cart')} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
+          <Pressable onPress={() => navigation.navigate('Wishlist')} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/heart.png") : require("./images/heartBlack.png")}/>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Wishlist</Text>
           </Pressable>

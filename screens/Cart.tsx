@@ -106,18 +106,18 @@ export default function Cart() {
     const [deleteMode, setDeleteMode] = useState(false)
     const [selectedProducts, setSelectedProducts] = useState<string[]>([])
     const APressable = Animated.createAnimatedComponent(Pressable)
-    const buttonScale = useSharedValue(1)
-    const buttonScaleAnim = useAnimatedStyle(() => {
+    const productScale = useSharedValue(1)
+    const productScaleAnim = useAnimatedStyle(() => {
         return {
-            transform:[{scale:buttonScale.value}]
+            transform:[{scale:productScale.value}]
         }
     })
     function toggleDeleteMode(){
         setDeleteMode(prev => !prev)
-        buttonScale.value = withTiming(!deleteMode ? .9 : 1, {duration:150})
+        productScale.value = withTiming(!deleteMode ? .9 : 1, {duration:150})
     }
     function addOrRemoveProduct(_id:string){
-        if(selectedProducts.includes(_id)){
+        if(deleteMode && selectedProducts.includes(_id)){
             setSelectedProducts(prev => prev.filter(id => id !== _id))
             return
         }
@@ -125,7 +125,7 @@ export default function Cart() {
     }
     async function deleteCartItems(){
         setDeleteMode(false)
-        buttonScale.value = withTiming(1, {duration:150})
+        productScale.value = withTiming(1, {duration:150})
         const filteredProducts = cart.filter(product => !selectedProducts.includes(product._id))
         setCart([...filteredProducts])
         const session = await AsyncStorage.getItem("session")
@@ -144,7 +144,7 @@ export default function Cart() {
     useEffect(() => {
         BackHandler.addEventListener('hardwareBackPress', () => {
             if(deleteMode){
-                buttonScale.value = withTiming(1, {duration:150})
+                productScale.value = withTiming(1, {duration:150})
                 setDeleteMode(false)
             }
             return true
@@ -156,7 +156,7 @@ return (
                 <FlatList style={{width:dvw, height:'100%'}} contentContainerStyle={{alignItems:'center'}}
                     data={cart}
                     renderItem={({item}) => (
-                        <Animated.View style={buttonScaleAnim}>
+                        <Animated.View style={productScaleAnim}>
                             <Pressable onPress={() => addOrRemoveProduct(item._id)} onLongPress={toggleDeleteMode} style={[styles.product, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:6} : {backgroundColor:'white', shadowColor:'black', elevation:4}]}>
                                 <Image style={styles.productImage} source={{uri:item.productImage}}/>
                                 <View style={styles.productDataWrapper}>
