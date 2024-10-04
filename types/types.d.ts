@@ -55,7 +55,7 @@ type CartItem = {
     dateAddedToCart:Date
 }
 type WishlistItem = {
-    _id:string,
+    productDocId:string,
     productName:string,
     manufacturer:string,
     productPrice:number,

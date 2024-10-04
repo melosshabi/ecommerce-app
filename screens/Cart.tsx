@@ -129,7 +129,7 @@ export default function Cart() {
         const filteredProducts = cart.filter(product => !selectedProducts.includes(product._id))
         setCart([...filteredProducts])
         const session = await AsyncStorage.getItem("session")
-        await fetch(`http://10.0.2.2:3000/api/editCart`, {
+        await fetch(`${process.env.URL}/api/editCart`, {
             method:"DELETE",
             headers:{
                 'Mobile':'True',
