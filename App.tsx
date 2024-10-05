@@ -13,6 +13,7 @@ import {useEffect, useState } from 'react';
 import Cart from './screens/Cart';
 import Signup from './screens/SignUp';
 import Wishlist from './screens/Wishlist';
+import Account from './screens/Account';
 
 const dvh = Dimensions.get('screen').height
 function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean){
@@ -104,6 +105,7 @@ export default function App() {
             <Drawer.Screen name="SignUp" options={{unmountOnBlur:true}} component={Signup}/>
             <Drawer.Screen options={{unmountOnBlur:true}} name="Cart" component={Cart}/>
             <Drawer.Screen options={{unmountOnBlur:true}} name="Wishlist" component={Wishlist}/>
+            <Drawer.Screen name="Account" component={Account}/>
           </Drawer.Navigator>
         </NavigationContainer>
       </SafeAreaView>

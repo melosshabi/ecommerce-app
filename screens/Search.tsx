@@ -26,7 +26,7 @@ export default function Search() {
         //     pageTranslate.value = withTiming(0, {duration:150})
         // })
     }, [])
-  return (
+return (
     <View style={[styles.searchPage, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
         <View style={[styles.searchWrapper, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:4} : {backgroundColor:'white', shadowColor:"black", elevation:4}]}>
             <TextInput style={[styles.searchInput, ]} placeholder='Search' defaultValue={query} onChangeText={text => setQuery(text)} onSubmitEditing={() => searchProduct()}/>
@@ -42,7 +42,7 @@ export default function Search() {
             )}/>
         <Footer currentScreen='Search' />
     </View>
-  )
+)
 }
 
 const styles = StyleSheet.create({

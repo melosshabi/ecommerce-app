@@ -18,7 +18,7 @@ type ProductProps = {
     picture:string,
     name:string,
     price:number,
-    animationFunction:() => void
+    animationFunction?:() => void
 }
 type ComponentProps = {
     Home:undefined,
@@ -36,6 +36,7 @@ type ComponentProps = {
     Search:undefined,
     Cart:undefined,
     Wishlist:undefined,
+    Account:undefined
 }
 type DecodedToken = {
     _id:string,
