@@ -66,13 +66,6 @@ export default function Signin({route}:SignInParams) {
         const decoded: DecodedToken = jwtDecode(data.session)
 
         await AsyncStorage.setItem("session", data.session)
-        await AsyncStorage.setItem("user", JSON.stringify({
-            _id:decoded._id,
-            username:decoded.username,
-            email:decoded.email,
-            profilePictureUrl:decoded.profilePictureUrl,
-            cartItemsCount:decoded.cartItemsCount
-        }))
         route.params.setUser({
             _id:decoded._id,
             username:decoded.username,

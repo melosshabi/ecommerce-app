@@ -14,15 +14,17 @@ import Cart from './screens/Cart';
 import Signup from './screens/SignUp';
 import Wishlist from './screens/Wishlist';
 import Account from './screens/Account';
+import { jwtDecode } from 'jwt-decode';
 
 const dvh = Dimensions.get('screen').height
 function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean){
   const [user, setUser] = useState<DecodedToken | null>(null)
   useEffect(() => {
     async function updateUserObj(){
-      const data = await AsyncStorage.getItem("user")
-      if(data){
-        setUser(JSON.parse(data))
+      const token = await AsyncStorage.getItem("session")
+      if(token){
+        const userObj = jwtDecode(token)
+        setUser(userObj as DecodedToken)
       }
     }
     updateUserObj()
@@ -95,7 +97,6 @@ export default function App() {
 
             },
             title:'',
-            
           }} 
           drawerContent={props =>drawerContent(props, scheme === 'dark')} >
             <Drawer.Screen name="Home" component={Home}/>

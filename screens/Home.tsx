@@ -39,7 +39,7 @@ export default function Home() {
     }
 return (
     <View style={[styles.homeScreen, darkMode && {backgroundColor:colors.black}]}>
-        <FlatList 
+        <FlatList
             data={products}
             numColumns={2}
             style={{marginTop:10}}

@@ -1,10 +1,11 @@
-import {Dimensions, Image, Keyboard, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { Image, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native'
+import React, { useState } from 'react'
 import Footer from '../components/Footer'
 import colors from '../lib/colors'
 import { FlatList } from 'react-native-gesture-handler'
 import Product from '../components/Product'
 import { useNavigation } from '@react-navigation/native'
+import Animated, { Easing, FadeInRight, FadeOutRight, useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated'
 
 export default function Search() {
     const navigation = useNavigation()
@@ -17,15 +18,25 @@ export default function Search() {
         const data = await res.json()
         setProducts([...data.products])
     }
-    useEffect(() => {
-        // I have to use type any in this case since the KeyboardEvent type doesn't include endCoordinates
-        // Keyboard.addListener('keyboardDidShow', (e:any) => {
-        //     pageTranslate.value = withTiming(-e.endCoordinates.height, {duration:150})
-        // })
-        // Keyboard.addListener("keyboardDidHide", () => {
-        //     pageTranslate.value = withTiming(0, {duration:150})
-        // })
-    }, [])
+    const [showNotif, setShowNotif] = useState(false)
+    const progressBarWidth = useSharedValue('85%')
+    // @ts-ignore
+    const progressBarStyle = useAnimatedStyle(() => {
+        return {
+            width:progressBarWidth.value
+        }
+    })
+    function showSucessAlert(){
+        setShowNotif(true)
+        if(progressBarWidth.value !== '0%' && progressBarWidth.value !== '85%'){
+            progressBarWidth.value = '85%'
+        }
+        progressBarWidth.value = withTiming('0%', {duration:3000, easing:Easing.linear})
+        setTimeout(() => {
+            progressBarWidth.value = '100%'
+            setShowNotif(false)
+        }, 3100)
+    }
 return (
     <View style={[styles.searchPage, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
         <View style={[styles.searchWrapper, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:4} : {backgroundColor:'white', shadowColor:"black", elevation:4}]}>
@@ -38,8 +49,17 @@ return (
             style={{minWidth:'100%'}}
             numColumns={2}
             renderItem={({item}) => (
-                <Product _id={item._id} name={item.productName} picture={item.pictures[0]} price={item.productPrice}/>
+                <Product _id={item._id} name={item.productName} picture={item.pictures[0]} price={item.productPrice} animationFunction={showSucessAlert}/>
             )}/>
+        {showNotif && 
+            <Animated.View entering={FadeInRight} exiting={FadeOutRight} style={[styles.successAlert, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
+                <View style={styles.checkMarkTextWrapper}>
+                    <Image style={styles.greenCheckmark} source={require("../images/checkmarkGreen.png")}/>
+                    <Text style={[styles.addedText, darkMode ? {color:'white'} : {color:"black"}]}>Added To Cart</Text>
+                </View>
+                <Animated.View style={[styles.progressBar, progressBarStyle]}></Animated.View>
+            </Animated.View>
+        }
         <Footer currentScreen='Search' />
     </View>
 )
@@ -75,5 +95,38 @@ const styles = StyleSheet.create({
         marginRight:'auto',
         marginLeft:15,
         marginTop:15
+    },
+    successAlert:{
+        width:'50%',
+        height:'10%',
+        borderColor:colors.orange,
+        borderWidth:1,
+        borderRadius:20,
+        position:'absolute',
+        bottom:'10%',
+        right:10,
+        shadowColor:'black',
+        elevation:4,
+    },
+    checkMarkTextWrapper:{
+        width:'100%',
+        height:'100%',
+        flexDirection:'row',
+        alignItems:'center',
+        justifyContent:'center',
+    },
+    greenCheckmark:{
+        width:30,
+        height:30,
+        marginRight:10
+    },
+    addedText:{
+        fontSize:17
+    },
+    progressBar:{
+        height:5,
+        backgroundColor:colors.orange,
+        transform:[{translateY:-10}],
+        marginLeft:20
     }
 })

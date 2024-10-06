@@ -11,14 +11,14 @@ interface Product {
     productReviews:Array,
 }
 type Footer = {
-    currentScreen:"Home" | "Search" | "Cart" | "Profile" | undefined
+    currentScreen:"Home" | "Search" | "Cart" | "Profile" | "Account" | undefined
 }
 type ProductProps = {
     _id:string,
     picture:string,
     name:string,
     price:number,
-    animationFunction?:() => void
+    animationFunction:() => void
 }
 type ComponentProps = {
     Home:undefined,
