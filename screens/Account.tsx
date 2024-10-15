@@ -4,14 +4,19 @@ import Footer from '../components/Footer'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { jwtDecode } from 'jwt-decode'
 import colors from '../lib/colors'
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import Animated, { Easing, useAnimatedKeyboard, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { Formik, } from 'formik'
 import * as yup from 'yup'
 import { URL } from '@env'
+import {Asset, launchImageLibrary} from 'react-native-image-picker'
+import { useNavigation } from '@react-navigation/native'
+import { updateJWT } from '../lib/lib'
 
 const dvh = Dimensions.get('screen').height
 const dvw = Dimensions.get('screen').width
 export default function Account() {
+  const navigation = useNavigation()
+  const [jwtToken, setJwtToken] = useState("")
   const [user, setUser] = useState<DecodedToken | null>(null)
   let oldUsername = user?.username
   let oldEmail = user?.email
@@ -20,12 +25,57 @@ export default function Account() {
     async function getUserObj(){
       const token = await AsyncStorage.getItem('session')
       if(token){
+        setJwtToken(token)
         const userData = jwtDecode(token)
         setUser(userData as DecodedToken)
+      }else{
+        // @ts-ignore
+        navigation.navigate("Home", undefined)
       }
     }
     getUserObj()
   }, [])
+  const [newProfilePicture, setNewProfilePicture] = useState<Asset | null>(null)
+  function openImagePicker(){
+    launchImageLibrary({mediaType:"photo", includeBase64:true}, res => {
+      if(res.assets){
+        setNewProfilePicture(res.assets[0])
+      }
+    })
+  }
+  async function uploadNewPicture(){
+    const formData = new FormData()
+    formData.append('username', user?.username)
+    formData.append('email', user?.email)
+    formData.append('profilePicture', newProfilePicture?.base64)
+    setNewProfilePicture(null)
+    setUser(prev => ({...prev, profilePictureUrl:newProfilePicture?.uri} as DecodedToken))
+    alertTransform.value = withTiming(dvw - dvw / 1.9, {duration:450, easing:Easing.elastic()})
+    alertOpacity.value = withTiming(1, {duration:350, easing:Easing.elastic()})
+    progressBarWidth.value = withTiming('0%', {duration:3000})
+    setTimeout(() => {
+      progressBarWidth.value = '100%'
+    }, 3400)
+    setTimeout(() => {
+      alertTransform.value = withTiming(dvw, {duration:450, easing:Easing.elastic()})
+      alertOpacity.value = withTiming(0, {duration:350, easing:Easing.elastic()})
+    }, 3000)
+    const res = await fetch(`${URL}/api/updateUser`, {
+      method:"PATCH",
+      headers:{
+        "Mobile":"true",
+        "Authorization":`Bearer ${jwtToken}`,
+        "Content-Type":"multipart/form-data"
+      },
+      body:formData
+    })
+    const data = await res.json()
+    if(data.msg === 'profile-updated'){
+      const newJWT = await updateJWT()
+      const newUserData = jwtDecode(newJWT)
+      setUser(newUserData as DecodedToken)
+    }
+  }
   const APressable = Animated.createAnimatedComponent(Pressable)
   const [editMode, setEditMode] = useState(false)
   const editProfileTranslate = useSharedValue(0)
@@ -88,19 +138,39 @@ export default function Account() {
     email:yup.string().email()
   })
   const alertTransform = useSharedValue(dvw)
-  const alertOpacity = useSharedValue(0)
+  const alertOpacity = useSharedValue(1)
   const alertAnim = useAnimatedStyle(() => {
     return {
-      transform:[{translateY:dvh - dvh / 3.5}, {translateX:alertTransform.value}],
+      transform:[{translateY:dvh - dvh / 3.2}, {translateX:alertTransform.value}],
       opacity:alertOpacity.value
+    }
+  })
+  const progressBarWidth = useSharedValue('100%')
+  // @ts-ignore
+  const progressBarAnim = useAnimatedStyle(() => {
+    return {
+      width:progressBarWidth.value
     }
   })
   async function saveChanges(username:string, email:string){
     setEditMode(false)
     toggleBorderAnimations(inputs.username, false)
     toggleBorderAnimations(inputs.email, false)
-    editProfileTranslate.value = withTiming(0, {duration:350})
-    saveProfileTranslate.value = withTiming(500, {duration:350})
+    editProfileTranslate.value = withTiming(0, {duration:750, easing:Easing.elastic()})
+    saveProfileTranslate.value = withTiming(500, {duration:350, easing:Easing.elastic()})
+    alertTransform.value = withTiming(dvw - dvw / 1.9, {duration:450})
+    alertOpacity.value = withTiming(1, {duration:350})
+    progressBarWidth.value = withTiming('0%', {duration:3000})
+    setTimeout(() => {
+      progressBarWidth.value = '100%'
+    }, 3400)
+    setTimeout(() => {
+      alertTransform.value = withTiming(dvw, {duration:450})
+      alertOpacity.value = withTiming(0, {duration:350})
+    }, 3000)
+    const formData = new FormData()
+    formData.append('username', username)
+    formData.append('email', email)
     const jwtToken = await AsyncStorage.getItem("session")
     const res = await fetch(`${URL}/api/updateUser`, {
       method:"PATCH",
@@ -108,26 +178,45 @@ export default function Account() {
         "Mobile":"true",
         "Authorization":`Bearer ${jwtToken}`
       },
-      body:JSON.stringify({username, email})
+      body:formData
     })
     const resData = await res.json()
     if(resData.msg === 'profile-updated'){
-      alertTransform.value = withTiming(dvw - dvw / 2, {duration:450})
-      alertOpacity.value = withTiming(1, {duration:350})
-      
-      setTimeout(() => {
-        alertTransform.value = withTiming(dvw, {duration:450})
-        alertOpacity.value = withTiming(0, {duration:350})
-      }, 3000)
+      const newJWT = await updateJWT()
+      setUser(jwtDecode(newJWT))
     }
   }
+  function cancelImageChange(){
+    setNewProfilePicture(null)
+  }
+  const emailInput = useRef(null)
+  const keyboard = useAnimatedKeyboard()
+  const screenTranslateAnim = useAnimatedStyle(() => {
+    return {
+      transform:[{translateY:-keyboard.height.value / 2}],
+    }
+  })
   return (
-    <View style={[styles.accountScreen, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
+    <Animated.View style={[styles.accountScreen, screenTranslateAnim, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
       <View style={styles.pfpWrapper}>
-        <Image style={styles.pfp} source={user ? {uri:user?.profilePictureUrl} : require('../images/avatar.png')}/>
-        <Pressable style={({pressed}) => [styles.uploadBtn, pressed && {backgroundColor:colors.darkerOrange},darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}]}>
-          <Text style={styles.uploadText}>Upload new Picture</Text>
-        </Pressable>
+        <View>
+          {/* Cancel Image Change */}
+          {newProfilePicture && <Pressable onPress={() => cancelImageChange()} style={[styles.cancelBtn, darkMode ? {backgroundColor:colors.black, borderWidth:1, borderColor:'white'} : {backgroundColor:'white', borderWidth:1, borderColor:'black'}]}>
+            <Image style={styles.xIcon} source={require('../images/x.png')}/>
+          </Pressable>}
+          <Image style={styles.pfp} source={user && !newProfilePicture ? {uri:user?.profilePictureUrl} : user && newProfilePicture ? {uri:newProfilePicture.uri} : require('../images/avatar.png')}/>
+        </View>
+        <View>
+          <Pressable onPress={() => openImagePicker()} style={({pressed}) => [styles.pictureBtns, pressed && {backgroundColor:colors.darkerOrange},darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}]}>
+            <Text style={styles.uploadText}>Upload new Picture</Text>
+          </Pressable>
+          {
+            newProfilePicture && 
+            <Pressable onPress={() => uploadNewPicture()} style={({pressed}) => [styles.pictureBtns, pressed && {backgroundColor:colors.darkerOrange},darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}]}>
+              <Text style={styles.uploadText}>Save new Picture</Text>
+            </Pressable>
+          }
+        </View>
       </View>
       {/* Account Information */}
       <View style={styles.accountInfo}>
@@ -137,7 +226,7 @@ export default function Account() {
           validationSchema={profileSchema}
           onSubmit={values => saveChanges(values.username as string, values.email as string)}
         >
-          {({handleChange, handleBlur, values, handleSubmit}) => (
+          {({handleChange, values, handleSubmit}) => (
           <View style={{width:'80%', alignItems:'center'}}>
             <View style={styles.inputWrappers}>
               <Text style={[styles.text, darkMode ? {color:'white'} : {color:'black'}]}>Username</Text>
@@ -148,8 +237,12 @@ export default function Account() {
                 editable={editMode}
                 value={values.username}
                 onChangeText={handleChange('username')}
+                returnKeyType="next"
+                // @ts-ignore
+                onSubmitEditing={() => emailInput.current.focus()}
                 />
             </View>
+
             <View style={styles.inputWrappers}>
               <Text style={[styles.text, darkMode ? {color:'white'} : {color:'black'}]}>Email</Text>
               <Image style={styles.icons} source={darkMode ? require("../images/at.png") : require('../images/atBlack.png')}/>
@@ -159,6 +252,7 @@ export default function Account() {
                 editable={editMode} 
                 value={values.email}
                 onChangeText={handleChange('email')}
+                ref={emailInput}
                 />
             </View>
               <APressable onPress={toggleEditMode} style={[styles.profileBtns, editProfileAnim, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}]}>
@@ -173,12 +267,15 @@ export default function Account() {
       </View>
       {/* Account updated Alert */}
       <Animated.View style={[styles.accountAlert, alertAnim, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:4, borderWidth:1, borderColor:'white'} : {backgroundColor:'white', shadowColor:'black', elevation:4, borderWidth:1, borderColor:'black'}]}>
-        <Image style={styles.checkmark} source={require('../images/checkmarkGreen.png')}/>
-        <Text style={[styles.updatedText, darkMode ? {color:'white'} : {color:'black'}]}>Account Updated</Text>
+        <View style={styles.checkmarkTextWrapper}>
+          <Image style={styles.checkmark} source={darkMode ? require('../images/checkmark.png') : require('../images/checkmarkBlack.png')}/>
+          <Text style={[styles.updatedText, darkMode ? {color:'white'} : {color:'black'}]}>Account Updated</Text>
+        </View>
+        <Animated.View style={[styles.progressBar, progressBarAnim]}></Animated.View>
       </Animated.View>
 
       <Footer currentScreen={"Account"}/>
-    </View>
+    </Animated.View>
   )
 }
 
@@ -191,21 +288,24 @@ const styles = StyleSheet.create({
     flexDirection:'row',
     alignItems:'center',
     justifyContent:'space-around',
-    marginTop:20
+    paddingVertical:20
   },
   pfp:{
     width:100,
     height:100,
+    borderRadius:50
   },
-  uploadBtn:{
+  pictureBtns:{
     backgroundColor:colors.orange,
     paddingVertical:10,
     paddingHorizontal:15,
-    borderRadius:8
+    borderRadius:8,
+    marginVertical:5
   },
   uploadText:{
     color:'white',
-    fontFamily:"WorkSans-Medium"
+    fontFamily:"WorkSans-Medium",
+    textAlign:'center'
   },
   accountInfo:{
     alignItems:'center'
@@ -235,12 +335,11 @@ const styles = StyleSheet.create({
     width:'80%'
   },
   profileBtns:{
-    width:'60%',
+    width:'65%',
     backgroundColor:colors.orange,
     paddingVertical:18,
     paddingHorizontal:25,
     borderRadius:10,
-    marginTop:50,
   },
   saveText:{
     color:'white',
@@ -249,12 +348,15 @@ const styles = StyleSheet.create({
     textAlign:'center'
   },
   accountAlert:{
-    flexDirection:'row',
-    justifyContent:'center',
+    justifyContent:'flex-end',
     alignItems:'center',
     padding:10,
     borderRadius:8,
     position:'absolute',
+  },
+  checkmarkTextWrapper:{
+    flexDirection:'row',
+    alignItems:'center'
   },
   checkmark:{
     width:35,
@@ -264,5 +366,27 @@ const styles = StyleSheet.create({
   updatedText:{
     fontSize:15,
     fontFamily:"WorkSans-Medium"
+  },
+  progressBar:{
+    height:3,
+    backgroundColor:colors.orange,
+    marginTop:10,
+    marginLeft:1,
+    alignSelf:'flex-start'
+  },
+  cancelBtn:{
+    position:'absolute',
+    left:'65%',
+    top:'-10%',
+    width:40,
+    height:40,
+    zIndex:1,
+    borderRadius:50,
+    justifyContent:'center',
+    alignItems:'center'
+  },
+  xIcon:{
+    width:40,
+    height:40
   }
 })

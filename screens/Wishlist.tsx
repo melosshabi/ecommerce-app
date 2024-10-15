@@ -68,7 +68,7 @@ export default function Wishlist() {
         })
         setSelectedProducts([])
     }
- return (
+return (
     <View style={styles.wishlist}>
         <FlatList
             style={{width:dvw}}

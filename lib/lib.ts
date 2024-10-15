@@ -1,3 +1,4 @@
+import { URL } from "@env"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
 export async function addToCart(productDocId:string, desiredQuantity:number){
@@ -21,5 +22,17 @@ export async function addToCart(productDocId:string, desiredQuantity:number){
         }else{
             return false
         }
+    }
+}
+export async function updateJWT(){
+    const oldJWT = await AsyncStorage.getItem("session")
+    if(oldJWT){
+        const res = await fetch(`${URL}/api/mobileAuth`, {
+            method:"PATCH",
+            body:JSON.stringify({token:oldJWT})
+        })
+        const data = await res.json()
+        await AsyncStorage.setItem("session", data.newToken)
+        return data.newToken
     }
 }

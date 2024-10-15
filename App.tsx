@@ -15,16 +15,17 @@ import Signup from './screens/SignUp';
 import Wishlist from './screens/Wishlist';
 import Account from './screens/Account';
 import { jwtDecode } from 'jwt-decode';
+import { updateJWT } from './lib/lib';
 
 const dvh = Dimensions.get('screen').height
 function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean){
   const [user, setUser] = useState<DecodedToken | null>(null)
   useEffect(() => {
     async function updateUserObj(){
-      const token = await AsyncStorage.getItem("session")
-      if(token){
-        const userObj = jwtDecode(token)
-        setUser(userObj as DecodedToken)
+      const newToken = await updateJWT()
+      if(newToken){
+        const newUserData = jwtDecode(newToken)
+        setUser(newUserData as DecodedToken)
       }
     }
     updateUserObj()
@@ -33,13 +34,12 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
     setUser(null)
     await AsyncStorage.removeItem('user')
     await AsyncStorage.removeItem('token')
-    // navigation.navigate("")
     navigation.closeDrawer()
   }
   return (
     <View style={[styles.drawer, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
       <View style={styles.avatarWrapper}>
-          { user && 
+          {user && 
             <>
             <Image style={styles.avatar} source={!user?.profilePictureUrl ? require ("./images/avatar.png"): {uri:user.profilePictureUrl}}/>
             <Text style={[styles.name, darkMode ? {color:'white'} : {color:'black'}]}>{user?.username}</Text>
@@ -94,7 +94,6 @@ export default function App() {
             headerLeft:() => <Image style={styles.cartLogo} source={require("./images/cartLogo.png")}/>,
             headerTitleStyle:{
               color: scheme === 'dark' ? 'white' : colors.black,
-
             },
             title:'',
           }} 
@@ -134,7 +133,8 @@ const styles = StyleSheet.create({
   avatar:{
     width:100,
     height:100,
-    marginVertical:10
+    marginVertical:10,
+    borderRadius:50
   },
   name:{
     fontFamily:"WorkSans-Medium",

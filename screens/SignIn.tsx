@@ -34,10 +34,6 @@ export default function Signin({route}:SignInParams) {
         }
     })
     const navigation = useNavigation()
-    useEffect(() => {
-        // @ts-ignore
-        // I have to use type any in this case since the KeyboardEvent type doesn't include endCoordinates
-    }, [])
     const passwordInputRef = useRef(null)
     const signInSchema = yup.object().shape({
         username:yup.string(),
