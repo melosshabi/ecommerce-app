@@ -19,9 +19,28 @@ export async function addToCart(productDocId:string, desiredQuantity:number){
         const parsedRes = await res.json()
         if(parsedRes.msg === 'added-to-cart'){
             return true
-        }else{
-            return false
         }
+        return false
+    }
+}
+export async function addToWishlist(productDocId:string){
+    const session = await AsyncStorage.getItem('session')
+    if(session){
+        const res = await fetch(`${URL}/api/wishlist`, {
+            method:"PATCH",
+            headers:{
+                "Mobile":"true",
+                "Authorization":`Bearer ${session}`,
+            },
+            body:JSON.stringify({
+                productDocId,
+            })
+        })
+        const parsedRes = await res.json()
+        if(parsedRes.messageCode === 'added-to-wishlist'){
+            return true
+        }
+        return false
     }
 }
 export async function updateJWT(){

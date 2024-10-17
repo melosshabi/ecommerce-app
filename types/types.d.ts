@@ -18,7 +18,7 @@ type ProductProps = {
     picture:string,
     name:string,
     price:number,
-    animationFunction:() => void
+    animationFunction:(option:"Cart" | "Wishlist") => void
 }
 type ComponentProps = {
     Home:undefined,

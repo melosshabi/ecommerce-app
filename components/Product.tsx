@@ -2,7 +2,7 @@ import { Image, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-
 import React from 'react'
 import colors from '../lib/colors'
 import { useNavigation } from '@react-navigation/native'
-import { addToCart } from '../lib/lib'
+import { addToCart, addToWishlist } from '../lib/lib'
 
 export default function Product({_id, picture, name, price, animationFunction}:ProductProps) {
     const darkMode = useColorScheme() === 'dark'
@@ -17,10 +17,15 @@ return (
             <Pressable onPress={async () => {
                 const added = await addToCart(_id, 1)
                 if(added){
-                    animationFunction()
+                    animationFunction("Cart")
                 }
             }} style={({pressed}) => [styles.actionButtons, darkMode ? {backgroundColor:colors.transparentWhite} : !darkMode ? {backgroundColor:colors.black3} : {}, pressed && {opacity:.7}]}><Image style={styles.actionButtonIcons} source={darkMode ? require("../images/cart.png") : require("../images/cartBlack.png")}/></Pressable>
-            <Pressable style={({pressed}) => [styles.actionButtons, darkMode ? {backgroundColor:colors.transparentWhite} : !darkMode ? {backgroundColor:colors.black3} : {}, pressed && {opacity:.7}]}><Image style={styles.actionButtonIcons} source={darkMode ? require("../images/heart.png") : require("../images/heartBlack.png")}/></Pressable>
+            <Pressable onPress={async () => {
+                const added = await addToWishlist(_id)
+                if(added){
+                    animationFunction("Wishlist")
+                }
+            }} style={({pressed}) => [styles.actionButtons, darkMode ? {backgroundColor:colors.transparentWhite} : !darkMode ? {backgroundColor:colors.black3} : {}, pressed && {opacity:.7}]}><Image style={styles.actionButtonIcons} source={darkMode ? require("../images/heart.png") : require("../images/heartBlack.png")}/></Pressable>
         </View>
     </Pressable>
 )}

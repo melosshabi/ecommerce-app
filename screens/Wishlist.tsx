@@ -43,7 +43,6 @@ export default function Wishlist() {
     async function addOrRemoveProduct(_id:string){
         if(deleteMode && selectedProducts.includes(_id)){
             setSelectedProducts(prev => prev.filter(id => id !== _id))
-            console.log(selectedProducts)
             return
         }
         setSelectedProducts(prev => [...prev, _id])

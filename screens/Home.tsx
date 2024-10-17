@@ -26,8 +26,11 @@ export default function Home() {
             width:progressBarWidth.value
         }
     })
-    function showSucessAlert(){
+    const [alertOption, setAlertOption] = useState("")
+    function showSucessAlert(option:"Cart" | "Wishlist"){
         setShowNotif(true)
+        setAlertOption(option)
+        console.log(option)
         if(progressBarWidth.value !== '0%' && progressBarWidth.value !== '85%'){
             progressBarWidth.value = '85%'
         }
@@ -51,7 +54,7 @@ return (
             <Animated.View entering={FadeInRight} exiting={FadeOutRight} style={[styles.successAlert, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
                 <View style={styles.checkMarkTextWrapper}>
                     <Image style={styles.greenCheckmark} source={darkMode ? require('../images/checkmark.png') : require("../images/checkmarkBlack.png")}/>
-                    <Text style={[styles.addedText, darkMode ? {color:'white'} : {color:"black"}]}>Added To Cart</Text>
+                    <Text style={[styles.addedText, darkMode ? {color:'white'} : {color:"black"}]}>Added To {alertOption}</Text>
                 </View>
                 <Animated.View style={[styles.progressBar, progressBarStyle]}></Animated.View>
             </Animated.View>
