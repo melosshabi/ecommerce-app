@@ -1,10 +1,11 @@
-import { Dimensions, Image, Keyboard, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, ScrollView } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
+import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, ScrollView } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { DrawerScreenProps } from '@react-navigation/drawer'
 import {URL} from "@env"
 import colors from '../lib/colors'
 import Footer from '../components/Footer'
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, } from 'react-native-reanimated'
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, } from 'react-native-reanimated'
+import { addToCart, addToWishlist } from '../lib/lib'
 
 type ProductDetails = DrawerScreenProps<ComponentProps, 'ProductDetails'>
 const dvh = Dimensions.get("screen").height
@@ -12,12 +13,6 @@ export default function ProductDetails({route}:ProductDetails) {
     const darkMode = useColorScheme() === 'dark'
     const [productData, setProductData] = useState<Product>()
     const [imagesCount, setImagesCount] = useState(0)
-    const [desiredQuantity, setDesiredQuantity] = useState("1")
-    let quantity = '1'
-    const pageTranslate = useSharedValue(0)
-    const pageTranslateStyle = useAnimatedStyle(() => ({
-      transform:[{translateY:pageTranslate.value}]
-    }))
     useEffect(() => {
       async function getProduct(){
           const res = await fetch(`${URL}/api/productDetails?_id=${route.params._id}`)
@@ -26,14 +21,17 @@ export default function ProductDetails({route}:ProductDetails) {
           setImagesCount(data.pictures.length)
       }
       getProduct()
-      // I have to use type any in this case since the KeyboardEvent type doesn't include endCoordinates
-      Keyboard.addListener('keyboardDidShow', (e:any) => {
-        pageTranslate.value = withTiming(-e.endCoordinates.height, {duration:150})
-      })
-      Keyboard.addListener("keyboardDidHide", () => {
-        pageTranslate.value = withTiming(0, {duration:150})
-      })
     }, [])
+    const [desiredQuantity, setDesiredQuantity] = useState("1")
+    const [quantityError, setQuantityError] = useState(false)
+    useEffect(() => {
+      if(parseInt(desiredQuantity) > productData?.quantity!){
+        setQuantityError(true)
+      }else{
+        setQuantityError(false)
+      }
+    }, [desiredQuantity])
+    let quantity = '1'
 
     const picture1Opacity = useSharedValue(1)
     const [activeImageIndex, setActiveImageIndex] = useState(0)
@@ -119,8 +117,7 @@ export default function ProductDetails({route}:ProductDetails) {
           circle1Background.value = withTiming('gray', {duration:150})
           circle2Background.value = withTiming(colors.orange, {duration:150})
           setActiveImageIndex(1)
-        } 
-        
+        }
       }
     }
     const AInput = Animated.createAnimatedComponent(TextInput)
@@ -135,9 +132,36 @@ export default function ProductDetails({route}:ProductDetails) {
         inputBorderColor.value = withTiming(darkMode ? 'white' : 'black', {duration:150})
       }
     }
+    const alertTranslate = useSharedValue(300)
+    const alertAnim = useAnimatedStyle(() => {
+      return {
+        transform:[{translateX:alertTranslate.value}]
+      }
+    })
+    const progressBarWidth = useSharedValue('100%')
+    // @ts-ignore
+    const progressBar = useAnimatedStyle(() => {
+      return {
+        width:progressBarWidth.value,
+        height:3,
+        backgroundColor:colors.orange,
+        marginTop:5
+      }
+    })
+    const [alertOption, setAlertOption] = useState("")
+    function showAlert(option:"Cart" | "Wishlist"){
+      setAlertOption(option)
+      alertTranslate.value = withTiming(-10, {duration:300, easing:Easing.elastic()})
+      progressBarWidth.value = withTiming('0%', {duration:3000})
+      setTimeout(() => {
+        alertTranslate.value = withTiming(500, {duration:300, easing:Easing.elastic()})
+      }, 3000)
+      setTimeout(() =>{
+        progressBarWidth.value = '100%'
+      }, 3500)
+    }
   return (
-    
-    <Animated.View style={[styles.productPage, pageTranslateStyle, darkMode && {backgroundColor:colors.black}]}>
+    <Animated.View style={[styles.productPage, darkMode && {backgroundColor:colors.black}]}>
       <ScrollView>
       <View>
         <View style={styles.slider}>
@@ -165,11 +189,35 @@ export default function ProductDetails({route}:ProductDetails) {
         <Text style={[styles.price, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.productPrice}€</Text>
         <Text style={[styles.stock, darkMode ? {color:'white'} : {color:'black'}]}>In Stock: {productData?.quantity}</Text>
         <AInput onBlur={() => handleQuantityInputFocus(false)} onFocus={() => handleQuantityInputFocus(true)} style={[styles.quantityInput, inputBorderAnim]} keyboardType='number-pad' defaultValue={desiredQuantity} onChangeText={text => quantity = text} onEndEditing={() => setDesiredQuantity(quantity)}/>
-          <Pressable style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}><Text style={styles.productButtonsText}>Add To Cart</Text><Image style={styles.buttonIcons} source={require("../images/cart.png")}/></Pressable>
-          <Pressable style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}><Text style={styles.productButtonsText}>Add To Wishlist</Text><Image style={styles.buttonIcons} source={require('../images/heart.png')}/></Pressable>
-          <Pressable style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}><Text style={styles.productButtonsText}>Order Now</Text><Image style={styles.buttonIcons} source={require("../images/checkmark.png")}/></Pressable>
+        {quantityError && <Text style={styles.quantityError}>Quantity too high</Text>}
+        <Pressable onPress={async () => {
+            const success = await addToCart(productData?._id as string, parseInt(desiredQuantity))
+            if(success){
+              showAlert("Cart")
+            }
+          }} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
+          <Text style={styles.productButtonsText}>Add To Cart</Text>
+          <Image style={styles.buttonIcons} source={require("../images/cart.png")}/>
+        </Pressable>
+        <Pressable onPress={async () => {
+            const success = await addToWishlist(productData?._id as string)
+            if(success){
+              showAlert('Wishlist')
+            }
+          }} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
+          <Text style={styles.productButtonsText}>Add To Wishlist</Text>
+          <Image style={styles.buttonIcons} source={require('../images/heart.png')}/>
+        </Pressable>
+        <Pressable style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}><Text style={styles.productButtonsText}>Order Now</Text><Image style={styles.buttonIcons} source={require("../images/checkmark.png")}/></Pressable>
       </View>
       </ScrollView>
+      <Animated.View style={[styles.alert, alertAnim, darkMode ? {backgroundColor:colors.black, borderWidth:1, borderColor:'white'} : {backgroundColor:'white', borderWidth:1, borderColor:'black'}]}>
+        <View style={styles.checkmarkTextWrapper}>
+          <Image style={styles.checkmark} source={darkMode ? require("../images/checkmark.png") : require('../images/checkmarkBlack.png')}/>
+          <Text style={[styles.alertText, darkMode ? {color:'white'} : {color:'black'}]}>Added to {alertOption}</Text>
+        </View>
+        <Animated.View style={progressBar}></Animated.View>
+      </Animated.View>
       <Footer currentScreen={undefined}/>
     </Animated.View>
   )
@@ -177,7 +225,7 @@ export default function ProductDetails({route}:ProductDetails) {
 
 const styles = StyleSheet.create({
   productPage:{
-    height:dvh - dvh / 7.5,
+    height:'100%',
     justifyContent:'space-between',
   },
   slider:{
@@ -260,6 +308,12 @@ const styles = StyleSheet.create({
     width:'15%',
     marginBottom:15
   },
+  quantityError:{
+    color:'red',
+    fontFamily:"WorkSans-Medium",
+    fontSize:18,
+    marginBottom:10
+  },
   productButtons:{
     width:'60%',
     marginVertical:5,
@@ -280,5 +334,25 @@ const styles = StyleSheet.create({
     width:25,
     height:25,
     marginLeft:5,
+  },
+  alert:{
+    width:'50%',
+    borderRadius:8,
+    padding:8,
+    position:'absolute',
+    top:'83%',
+    right:0
+  },
+  checkmarkTextWrapper:{
+    flexDirection:'row',
+    alignItems:'center',
+    justifyContent:'space-around',
+  },
+  checkmark:{
+    width:35,
+    height:35
+  },
+  alertText:{
+    fontFamily:"WorkSans-Medium"
   }
 })

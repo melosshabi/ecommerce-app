@@ -1,4 +1,4 @@
-import { Dimensions, Image, Keyboard, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native'
+import { Dimensions, Image, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import colors from '../lib/colors'
 import { useNavigation } from '@react-navigation/native'
@@ -9,15 +9,8 @@ const dvw = screen.width
 export default function Footer({currentScreen}:Footer) {
     const darkMode = useColorScheme() == 'dark'
     const navigation = useNavigation()
-    const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
     const [auth, setAuth] = useState(false)
     useEffect(() => {
-        Keyboard.addListener("keyboardDidShow", () => {
-            setIsKeyboardVisible(true)
-        })
-        Keyboard.addListener("keyboardDidHide", () => {
-            setIsKeyboardVisible(false)
-        })
         async function getToken(){
             const jwt = await AsyncStorage.getItem("session")
             if(jwt){
@@ -27,7 +20,7 @@ export default function Footer({currentScreen}:Footer) {
         getToken()
     }, [])
 return (
-    <View style={[styles.footer, isKeyboardVisible ? {height:'12%'} : {height:'8%'}, darkMode ? {backgroundColor:colors.black, shadowColor:'white', borderTopColor:colors.transparentWhite,} : {backgroundColor:'white', shadowColor:'black', borderTopColor:colors.black3,}]}>
+    <View style={[styles.footer, darkMode ? {backgroundColor:colors.black, shadowColor:'white', borderTopColor:colors.transparentWhite,} : {backgroundColor:'white', shadowColor:'black', borderTopColor:colors.black3,}]}>
         {/* @ts-ignore */}
         <Pressable onPress={() => navigation.navigate("Home")} style={({pressed}) => [styles.buttons, {marginLeft:5}, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}, currentScreen === 'Home' && darkMode ? {backgroundColor:colors.transparentWhite} : currentScreen === "Home" && {backgroundColor:colors.black3}]}>
             <Image style={[styles.icons]} source={darkMode ? require("../images/home.png") : require('../images/homeBlack.png')}/>
@@ -50,6 +43,7 @@ return (
 const styles = StyleSheet.create({
     footer:{
         width:dvw,
+        height:'8%',
         flexDirection:'row',
         elevation:4,
         justifyContent:'space-between',

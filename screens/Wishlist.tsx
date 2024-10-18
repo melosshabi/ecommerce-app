@@ -68,7 +68,7 @@ export default function Wishlist() {
         setSelectedProducts([])
     }
 return (
-    <View style={styles.wishlist}>
+    <View style={[styles.wishlist, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
         <FlatList
             style={{width:dvw}}
             contentContainerStyle={{alignItems:'center'}}

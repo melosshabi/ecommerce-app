@@ -30,7 +30,6 @@ export default function Home() {
     function showSucessAlert(option:"Cart" | "Wishlist"){
         setShowNotif(true)
         setAlertOption(option)
-        console.log(option)
         if(progressBarWidth.value !== '0%' && progressBarWidth.value !== '85%'){
             progressBarWidth.value = '85%'
         }
