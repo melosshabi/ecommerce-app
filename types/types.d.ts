@@ -62,3 +62,7 @@ type WishlistItem = {
     productPrice:number,
     productImage:string
 }
+type ProductExists = {
+    wishlist:boolean,
+    cart:boolean
+}

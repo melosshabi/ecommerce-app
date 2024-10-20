@@ -4,7 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 export async function addToCart(productDocId:string, desiredQuantity:number){
     const session = await AsyncStorage.getItem('session')
     if(session){
-        const res = await fetch(`${process.env.URL}/api/editCart`, {
+        const res = await fetch(`${URL}/api/editCart`, {
             method:"PATCH",
             headers:{
                 "Mobile":"true",
@@ -18,6 +18,26 @@ export async function addToCart(productDocId:string, desiredQuantity:number){
         })
         const parsedRes = await res.json()
         if(parsedRes.msg === 'added-to-cart'){
+            return true
+        }
+        return false
+    }
+}
+export async function removeFromCart(productDocId:string){
+    const session = await AsyncStorage.getItem('session')
+    if(session){
+        const res = await fetch(`${URL}/api/editCart`, {
+            method:"DELETE",
+            headers:{
+                "Mobile":"true",
+                "Authorization":`Bearer ${session}`,
+            },
+            body:JSON.stringify({
+                itemsToRemove:[productDocId]
+            })
+        })
+        const parsedRes = await res.json()
+        if(parsedRes.msg === 'products-deleted'){
             return true
         }
         return false
@@ -38,6 +58,26 @@ export async function addToWishlist(productDocId:string){
         })
         const parsedRes = await res.json()
         if(parsedRes.messageCode === 'added-to-wishlist'){
+            return true
+        }
+        return false
+    }
+}
+export async function removeFromWishlist(productDocId:string){
+    const session = await AsyncStorage.getItem('session')
+    if(session){
+        const res = await fetch(`${URL}/api/wishlist`, {
+            method:"DELETE",
+            headers:{
+                "Mobile":"true",
+                "Authorization":`Bearer ${session}`,
+            },
+            body:JSON.stringify({
+                itemsToRemove:[productDocId]
+            })
+        })
+        const parsedRes = await res.json()
+        if(parsedRes.msg === 'products-deleted'){
             return true
         }
         return false

@@ -5,7 +5,8 @@ import {URL} from "@env"
 import colors from '../lib/colors'
 import Footer from '../components/Footer'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, } from 'react-native-reanimated'
-import { addToCart, addToWishlist } from '../lib/lib'
+import { addToCart, addToWishlist, removeFromCart, removeFromWishlist } from '../lib/lib'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 type ProductDetails = DrawerScreenProps<ComponentProps, 'ProductDetails'>
 const dvh = Dimensions.get("screen").height
@@ -13,6 +14,7 @@ export default function ProductDetails({route}:ProductDetails) {
     const darkMode = useColorScheme() === 'dark'
     const [productData, setProductData] = useState<Product>()
     const [imagesCount, setImagesCount] = useState(0)
+    const [productExists, setProductExists] = useState<ProductExists>({wishlist:false, cart:false})
     useEffect(() => {
       async function getProduct(){
           const res = await fetch(`${URL}/api/productDetails?_id=${route.params._id}`)
@@ -20,7 +22,22 @@ export default function ProductDetails({route}:ProductDetails) {
           setProductData(data)
           setImagesCount(data.pictures.length)
       }
+      // This function checks if the product is already saved on the user's wishlist or cart
+      async function checkUserLists(){
+        const session = await AsyncStorage.getItem('session')
+        if(session){
+          const req = await fetch(`${URL}/api/checkUserLists?_id=${route.params._id}`, {
+            headers:{
+              'Mobile':"True",
+              "Authorization":`Bearer ${session}`
+            }
+          })
+          const data = await req.json()
+          if(data.productExists) setProductExists(data.productExists)
+        }
+      }
       getProduct()
+      checkUserLists()
     }, [])
     const [desiredQuantity, setDesiredQuantity] = useState("1")
     const [quantityError, setQuantityError] = useState(false)
@@ -132,12 +149,49 @@ export default function ProductDetails({route}:ProductDetails) {
         inputBorderColor.value = withTiming(darkMode ? 'white' : 'black', {duration:150})
       }
     }
+    const [alertMessage, setAlertMessage] = useState("")
     const alertTranslate = useSharedValue(300)
     const alertAnim = useAnimatedStyle(() => {
       return {
         transform:[{translateX:alertTranslate.value}]
       }
     })
+    async function handleListChanges(list:"Wishlist" | "Cart"){
+      if(list === 'Cart'){
+        if(!productExists?.cart){
+          const success = await addToCart(productData?._id as string, parseInt(desiredQuantity))
+            if(success){
+              setAlertMessage("Added to cart")
+              setProductExists(prev => ({...prev, cart:true}))
+              showAlert()
+            }
+        }else{
+          const success = await removeFromCart(productData?._id as string)
+          if(success){
+              setAlertMessage("Removed from cart")
+              setProductExists(prev => ({...prev, cart:false}))
+              showAlert()
+          }
+        }
+      }
+      else if(list === 'Wishlist'){
+        if(!productExists?.wishlist){
+          const success = await addToWishlist(productData?._id as string)
+            if(success){
+              setAlertMessage("Added to wishlist")
+              setProductExists(prev => ({...prev, wishlist:true}))
+              showAlert()
+            }
+        }else{
+          const success = await removeFromWishlist(productData?._id as string)
+          if(success){
+            setAlertMessage("Removed from wishlist")
+            setProductExists(prev => ({...prev, wishlist:false}))
+            showAlert()
+          }
+        }
+      }
+    }
     const progressBarWidth = useSharedValue('100%')
     // @ts-ignore
     const progressBar = useAnimatedStyle(() => {
@@ -148,9 +202,7 @@ export default function ProductDetails({route}:ProductDetails) {
         marginTop:5
       }
     })
-    const [alertOption, setAlertOption] = useState("")
-    function showAlert(option:"Cart" | "Wishlist"){
-      setAlertOption(option)
+    function showAlert(){
       alertTranslate.value = withTiming(-10, {duration:300, easing:Easing.elastic()})
       progressBarWidth.value = withTiming('0%', {duration:3000})
       setTimeout(() => {
@@ -190,22 +242,12 @@ export default function ProductDetails({route}:ProductDetails) {
         <Text style={[styles.stock, darkMode ? {color:'white'} : {color:'black'}]}>In Stock: {productData?.quantity}</Text>
         <AInput onBlur={() => handleQuantityInputFocus(false)} onFocus={() => handleQuantityInputFocus(true)} style={[styles.quantityInput, inputBorderAnim]} keyboardType='number-pad' defaultValue={desiredQuantity} onChangeText={text => quantity = text} onEndEditing={() => setDesiredQuantity(quantity)}/>
         {quantityError && <Text style={styles.quantityError}>Quantity too high</Text>}
-        <Pressable onPress={async () => {
-            const success = await addToCart(productData?._id as string, parseInt(desiredQuantity))
-            if(success){
-              showAlert("Cart")
-            }
-          }} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
-          <Text style={styles.productButtonsText}>Add To Cart</Text>
+        <Pressable onPress={() => handleListChanges("Cart")} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
+          <Text style={styles.productButtonsText}>{!productExists?.cart ? 'Add To Cart' : 'Remove from cart'}</Text>
           <Image style={styles.buttonIcons} source={require("../images/cart.png")}/>
         </Pressable>
-        <Pressable onPress={async () => {
-            const success = await addToWishlist(productData?._id as string)
-            if(success){
-              showAlert('Wishlist')
-            }
-          }} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
-          <Text style={styles.productButtonsText}>Add To Wishlist</Text>
+        <Pressable onPress={() => handleListChanges("Wishlist")} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
+          <Text style={styles.productButtonsText}>{!productExists?.wishlist ? 'Add To Wishlist' : 'Remove from wishlist'}</Text>
           <Image style={styles.buttonIcons} source={require('../images/heart.png')}/>
         </Pressable>
         <Pressable style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}><Text style={styles.productButtonsText}>Order Now</Text><Image style={styles.buttonIcons} source={require("../images/checkmark.png")}/></Pressable>
@@ -214,7 +256,7 @@ export default function ProductDetails({route}:ProductDetails) {
       <Animated.View style={[styles.alert, alertAnim, darkMode ? {backgroundColor:colors.black, borderWidth:1, borderColor:'white'} : {backgroundColor:'white', borderWidth:1, borderColor:'black'}]}>
         <View style={styles.checkmarkTextWrapper}>
           <Image style={styles.checkmark} source={darkMode ? require("../images/checkmark.png") : require('../images/checkmarkBlack.png')}/>
-          <Text style={[styles.alertText, darkMode ? {color:'white'} : {color:'black'}]}>Added to {alertOption}</Text>
+          <Text style={[styles.alertText, darkMode ? {color:'white'} : {color:'black'}]}>{alertMessage}</Text>
         </View>
         <Animated.View style={progressBar}></Animated.View>
       </Animated.View>
@@ -315,10 +357,10 @@ const styles = StyleSheet.create({
     marginBottom:10
   },
   productButtons:{
-    width:'60%',
-    marginVertical:5,
+    width:'68%',
+    marginVertical:10,
     backgroundColor:colors.orange,
-    paddingVertical:15,
+    paddingVertical:20,
     paddingHorizontal:25,
     borderRadius:8,
     flexDirection:'row',

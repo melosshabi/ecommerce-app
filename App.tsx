@@ -47,7 +47,8 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
           }
       </View>
       <View style={styles.options}>
-          {user && <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
+          {user && 
+          <Pressable onPress={() => navigation.navigate("Account")} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image source={darkMode ? require("./images/user.png") : require('./images/userBlack.png')} style={styles.optionIcons}/>
               <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Account</Text>
           </Pressable>}
