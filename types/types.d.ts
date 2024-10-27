@@ -36,7 +36,8 @@ type ComponentProps = {
     Search:undefined,
     Cart:undefined,
     Wishlist:undefined,
-    Account:undefined
+    Account:undefined,
+    Orders:undefined
 }
 type DecodedToken = {
     _id:string,
@@ -65,4 +66,13 @@ type WishlistItem = {
 type ProductExists = {
     wishlist:boolean,
     cart:boolean
+}
+type OrderData = {
+    _id:string,
+    clientDocId:string,
+    productDocId:string,
+    desiredQuantity:number,
+    productPrice:number,
+    totalPrice:number,
+    createdAt:string
 }

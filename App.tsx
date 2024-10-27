@@ -1,21 +1,23 @@
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
-import SignIn from './screens/SignIn';
 import HamburgerButton from './components/HamburgerButton';
 import { Dimensions, Image, Pressable, SafeAreaView, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import colors from './lib/colors';
-import Home from './screens/Home';
-import ProductDetails from './screens/ProductDetails';
-import Search from './screens/Search';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useEffect, useState } from 'react';
+// Screens
 import Cart from './screens/Cart';
+import SignIn from './screens/SignIn';
 import Signup from './screens/SignUp';
 import Wishlist from './screens/Wishlist';
 import Account from './screens/Account';
+import Search from './screens/Search';
+import Home from './screens/Home';
+import ProductDetails from './screens/ProductDetails';
 import { jwtDecode } from 'jwt-decode';
 import { updateJWT } from './lib/lib';
+import Orders from './screens/Orders';
 
 const dvh = Dimensions.get('screen').height
 function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean){
@@ -60,7 +62,7 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
               <Image style={styles.optionIcons} source={darkMode ? require("./images/heart.png") : require("./images/heartBlack.png")}/>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Wishlist</Text>
           </Pressable>
-          <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
+          <Pressable onPress={() => navigation.navigate("Orders")} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/orders.png") : require("./images/ordersBlack.png")}/>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Orders</Text>
           </Pressable>
@@ -107,6 +109,7 @@ export default function App() {
             <Drawer.Screen options={{unmountOnBlur:true}} name="Cart" component={Cart}/>
             <Drawer.Screen options={{unmountOnBlur:true}} name="Wishlist" component={Wishlist}/>
             <Drawer.Screen name="Account" component={Account}/>
+            <Drawer.Screen name="Orders" component={Orders} options={{unmountOnBlur:true}}/>
           </Drawer.Navigator>
         </NavigationContainer>
       </SafeAreaView>

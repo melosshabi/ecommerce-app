@@ -240,7 +240,7 @@ export default function ProductDetails({route}:ProductDetails) {
         <Text style={[styles.manufacturer, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.manufacturer}</Text>
         <Text style={[styles.price, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.productPrice}€</Text>
         <Text style={[styles.stock, darkMode ? {color:'white'} : {color:'black'}]}>In Stock: {productData?.quantity}</Text>
-        <AInput onBlur={() => handleQuantityInputFocus(false)} onFocus={() => handleQuantityInputFocus(true)} style={[styles.quantityInput, inputBorderAnim]} keyboardType='number-pad' defaultValue={desiredQuantity} onChangeText={text => quantity = text} onEndEditing={() => setDesiredQuantity(quantity)}/>
+        <AInput onBlur={() => handleQuantityInputFocus(false)} onFocus={() => handleQuantityInputFocus(true)} style={[styles.quantityInput, inputBorderAnim, darkMode ? {color:'white'} : {color:'black'}]} keyboardType='number-pad' defaultValue={desiredQuantity} onChangeText={text => quantity = text} onEndEditing={() => setDesiredQuantity(quantity)}/>
         {quantityError && <Text style={styles.quantityError}>Quantity too high</Text>}
         <Pressable onPress={() => handleListChanges("Cart")} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
           <Text style={styles.productButtonsText}>{!productExists?.cart ? 'Add To Cart' : 'Remove from cart'}</Text>
