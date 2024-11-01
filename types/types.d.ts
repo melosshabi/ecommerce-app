@@ -9,6 +9,7 @@ interface Product {
     quantity:number,
     pictures:string[],
     productReviews:Array,
+    createdAt:Date
 }
 type Footer = {
     currentScreen:"Home" | "Search" | "Cart" | "Profile" | "Account" | undefined
@@ -37,7 +38,8 @@ type ComponentProps = {
     Cart:undefined,
     Wishlist:undefined,
     Account:undefined,
-    Orders:undefined
+    Orders:undefined,
+    UserProducts:undefined
 }
 type DecodedToken = {
     _id:string,

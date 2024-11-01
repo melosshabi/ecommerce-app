@@ -18,6 +18,7 @@ import ProductDetails from './screens/ProductDetails';
 import { jwtDecode } from 'jwt-decode';
 import { updateJWT } from './lib/lib';
 import Orders from './screens/Orders';
+import UserProducts from './screens/UserProducts';
 
 const dvh = Dimensions.get('screen').height
 function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean){
@@ -66,7 +67,8 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
               <Image style={styles.optionIcons} source={darkMode ? require("./images/orders.png") : require("./images/ordersBlack.png")}/>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Orders</Text>
           </Pressable>
-          {user && <Pressable style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
+          {user && 
+          <Pressable onPress={() => navigation.navigate("UserProducts")} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/products.png") : require('./images/productsBlack.png')}/>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Products</Text>
           </Pressable>}
@@ -110,6 +112,7 @@ export default function App() {
             <Drawer.Screen options={{unmountOnBlur:true}} name="Wishlist" component={Wishlist}/>
             <Drawer.Screen name="Account" component={Account}/>
             <Drawer.Screen name="Orders" component={Orders} options={{unmountOnBlur:true}}/>
+            <Drawer.Screen name="UserProducts" component={UserProducts} options={{unmountOnBlur:true}}/>
           </Drawer.Navigator>
         </NavigationContainer>
       </SafeAreaView>
