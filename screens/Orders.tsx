@@ -12,7 +12,6 @@ export default function Orders() {
   const [products, setProducts] = useState<Product[]>([])
   const navigation = useNavigation()
   useEffect(() => {
-
     const controller = new AbortController()
     async function fetchOrders(){
       const session = await AsyncStorage.getItem("session")
@@ -41,7 +40,7 @@ export default function Orders() {
     return () => controller.abort()
   }, [])
   return (
-    <View style={[{height:'100%'}, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
+    <View style={[{height:'100%', justifyContent:'space-between'}, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
         <Text style={[styles.title, darkMode ? {color:'white'} : {color:'black'}]}>My Orders</Text>
         { orders.length > 0 && products.length > 0 && 
         <FlatList

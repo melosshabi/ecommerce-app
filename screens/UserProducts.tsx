@@ -4,6 +4,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import {URL} from "@env"
 import { getMonthString } from '../lib/lib'
 import colors from '../lib/colors'
+import Footer from '../components/Footer'
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 
 export default function UserProducts() {
     const [products, setProducts] = useState<Product[]>([])
@@ -24,8 +26,61 @@ export default function UserProducts() {
         }
         getUserProducts()
     }, [])
+    const deleteNotifTranslate = useSharedValue(500)
+    const deleteNotif = useAnimatedStyle(() => {
+        return {
+            // width:'60%',
+            backgroundColor:darkMode ? colors.black : "white",
+            position:'absolute',
+            padding:10,
+            borderRadius:8,
+            elevation:5,
+            shadowColor: darkMode ? 'white' : 'black',
+            bottom:70,
+            transform:[{translateX:deleteNotifTranslate.value}]
+        }
+    })
+    const progressBarWidth = useSharedValue('100%')
+    // @ts-ignore
+    const progressBar = useAnimatedStyle(() => {
+        return {
+            backgroundColor:colors.orange,
+            width:progressBarWidth.value,
+            height:3,
+            borderRadius:8,
+            marginTop:5
+        }
+    })
+    async function deleteUserProduct(productDocId:string){
+        const tempArr = [...products]
+        const newProducts = tempArr.filter((product:Product) => product._id !== productDocId)
+        setProducts([...newProducts])
+        const token = await AsyncStorage.getItem('session')
+        const res = await fetch(`http://10.0.2.2:3000/api/unlistProduct`, {
+            method:"DELETE",
+            headers:{
+                'Mobile':'true',
+                'Authorization':`Bearer ${token}`
+            },
+            body:JSON.stringify({
+                productDocId
+            })
+            
+        })
+        const data = await res.json()
+        if(data.msg === 'product-unlisted'){
+            deleteNotifTranslate.value = withTiming(180, {duration:500, easing:Easing.elastic()})
+            progressBarWidth.value = withTiming("0%", {duration:3000, easing:Easing.linear})
+            setTimeout(() => {
+                deleteNotifTranslate.value = withTiming(500, {duration:500, easing:Easing.elastic()})
+            }, 3000)
+            setTimeout(() => {
+                progressBarWidth.value = '100%'
+            }, 3500)
+        }
+    }
 return (
-    <View>
+    <View style={[{height:'100%', justifyContent:'space-between'}, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
         <Text style={[styles.title, darkMode ? {color:'white'} : {color:'black'}]}>My Products</Text>
         { products.length > 0 && products.length > 0 && 
         <FlatList
@@ -43,7 +98,7 @@ return (
                     <View style={styles.productData}>
                         <View style={styles.productNameTrashWrapper}>
                             <Text style={[styles.text, darkMode ? {color:'white'} : {color:'black'}]}>{products[index].productName}</Text>
-                            <Pressable style={({pressed}) => [styles.deleteBtn, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && !darkMode && {backgroundColor:colors.black3}]}>
+                            <Pressable onPress={() => deleteUserProduct(item._id)} style={({pressed}) => [styles.deleteBtn, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && !darkMode && {backgroundColor:colors.black3}]}>
                                 <Image style={styles.trash} source={darkMode ? require('../images/trash.png') : require("../images/trashBlack.png")}/>
                             </Pressable>
                         </View>
@@ -55,6 +110,14 @@ return (
             )}
         } 
         />}
+        <Animated.View style={deleteNotif}>
+            <View style={{flexDirection:'row', alignItems:'center', paddingVertical:10}}>
+                <Text style={[styles.deleteText, darkMode ? {color:'white'} : {color:'black'}]}>Product Deleted</Text>
+                <Image style={styles.checkmark} source={darkMode ? require("../images/checkmark.png") : require('../images/checkmarkBlack.png')}/>
+            </View>
+            <Animated.View style={progressBar}></Animated.View>
+        </Animated.View>
+        <Footer currentScreen={undefined}/>
     </View>
 )}
 
@@ -103,6 +166,14 @@ const styles = StyleSheet.create({
     date:{
         position:"absolute",
         bottom:-15,
-        right:5
+    },
+    deleteText:{
+        marginHorizontal:10,
+        fontFamily:"WorkSans-Medium",
+        fontSize:15,
+    },
+    checkmark:{
+        width:30,
+        height:30
     }
 })
