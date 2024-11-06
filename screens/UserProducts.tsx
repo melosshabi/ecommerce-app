@@ -6,6 +6,7 @@ import { getMonthString } from '../lib/lib'
 import colors from '../lib/colors'
 import Footer from '../components/Footer'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import { TextInput } from 'react-native-gesture-handler'
 
 export default function UserProducts() {
     const [products, setProducts] = useState<Product[]>([])
@@ -56,7 +57,7 @@ export default function UserProducts() {
         const newProducts = tempArr.filter((product:Product) => product._id !== productDocId)
         setProducts([...newProducts])
         const token = await AsyncStorage.getItem('session')
-        const res = await fetch(`http://10.0.2.2:3000/api/unlistProduct`, {
+        const res = await fetch(`${URL}/api/unlistProduct`, {
             method:"DELETE",
             headers:{
                 'Mobile':'true',
@@ -78,6 +79,40 @@ export default function UserProducts() {
                 progressBarWidth.value = '100%'
             }, 3500)
         }
+    }
+
+    const [quantityTimeout, setQuantityTimeout] = useState<NodeJS.Timeout | null>(null)
+    async function updateQuantity(productId:string, newQuantity:number){
+        const tempProducts = [...products]
+        tempProducts.forEach((product:Product) => {
+            if(product._id === productId){
+                product.quantity = newQuantity
+            }
+        })
+        setProducts([...tempProducts])
+        if(quantityTimeout){
+            clearTimeout(quantityTimeout)
+            setQuantityTimeout(null)
+        }
+        setTimeout(async () => {
+            const token = await AsyncStorage.getItem("session")
+            const res = await fetch(`http://10.0.2.2:3000/api/updateProductQuantity`, {
+                method:"PATCH",
+                headers:{
+                    "Mobile":'true',
+                    "Authorization":`Authorization ${token}`
+                },
+                body:JSON.stringify({
+                    productDocId:productId,
+                    newQuantity
+                })
+            })
+            const data = await res.json()
+            if(data.msg === 'product-updated'){
+                
+            }
+        }, 1000)
+        
     }
 return (
     <View style={[{height:'100%', justifyContent:'space-between'}, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
@@ -104,11 +139,25 @@ return (
                         </View>
                         <Text style={[styles.text, darkMode ? {color:'white'} : {color:'black'}]}>{products[index].manufacturer}</Text>
                         <Text style={[styles.text, darkMode ? {color:'white'} : {color:'black'}]}>{products[index].productPrice}€</Text>
-                        <Text style={[styles.text, styles.date, darkMode ? {color:'white'} : {color:'black'}]}>{`${date}-${month}-${year}`}</Text>
+                        <View style={styles.dateQuantityWrapper}>
+                            <Text style={[styles.date, darkMode ? {color:'white'} : {color:'black'}]}>{`${date}-${month}-${year}`}</Text>
+                            <View>
+                                <Text style={[styles.quantityText, darkMode ? {color:'white'} : {color:'black'}]}>Quantity</Text>
+                                <View style={styles.quantity}>
+                                    <Pressable style={styles.quantityButtons} onPress={() => updateQuantity(item._id, item.quantity - 1)}>
+                                        <Image source={darkMode ? require("../images/minus.png") : require('../images/minusBlack.png')} style={styles.quantityIcons}/>
+                                    </Pressable>
+                                    <TextInput editable={false}  value={item.quantity.toString()} style={[styles.quantityInput, darkMode ? {shadowColor:"white", backgroundColor:colors.black , elevation:4, color:'white'} : {shadowColor:"black", backgroundColor:'white', elevation:4, color:'black'}]} keyboardType='number-pad'/>
+                                    <Pressable style={styles.quantityButtons} onPress={() => updateQuantity(item._id, item.quantity + 1)}>
+                                        <Image source={darkMode ? require('../images/plus.png') : require("../images/plusBlack.png")} style={styles.quantityIcons}/>
+                                    </Pressable>
+                                </View>
+                            </View>
+                        </View>
                     </View>
                 </View>
             )}
-        } 
+        }
         />}
         <Animated.View style={deleteNotif}>
             <View style={{flexDirection:'row', alignItems:'center', paddingVertical:10}}>
@@ -163,10 +212,6 @@ const styles = StyleSheet.create({
         width:30,
         height:30,
     },
-    date:{
-        position:"absolute",
-        bottom:-15,
-    },
     deleteText:{
         marginHorizontal:10,
         fontFamily:"WorkSans-Medium",
@@ -175,5 +220,36 @@ const styles = StyleSheet.create({
     checkmark:{
         width:30,
         height:30
-    }
+    },
+    dateQuantityWrapper:{
+        width:'100%',
+        flexDirection:'row',
+        justifyContent:'space-around',
+        alignItems:'flex-end',
+    },
+    date:{
+        fontFamily:"WorkSans-Medium"
+    },
+    quantity:{
+        flexDirection:'row',
+        alignItems:'center'
+    },
+    quantityText:{
+        fontFamily:"WorkSans-Medium",
+        textAlign:'center',
+        marginBottom:10
+    },
+    quantityButtons:{
+        marginHorizontal:5
+    },
+    quantityIcons:{
+        width:30,
+        height:30,
+    },
+    quantityInput:{
+        width:50,
+        height:35,
+        borderRadius:8,
+        textAlign:'center',
+    },
 })
