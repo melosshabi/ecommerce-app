@@ -70,8 +70,13 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
           {user && 
           <Pressable onPress={() => navigation.navigate("UserProducts")} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
               <Image style={styles.optionIcons} source={darkMode ? require("./images/products.png") : require('./images/productsBlack.png')}/>
-            <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Products</Text>
+              <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>My Products</Text>
           </Pressable>}
+          {user && 
+          <Pressable onPress={() => navigation.navigate("PostProduct")} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
+            <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Sell</Text>
+          </Pressable>
+          }
       </View>
       {
         user ? <Pressable onPress={() => logOut()} style={({pressed}) => [styles.authButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed ? {backgroundColor:colors.black3} : {}]}><Text style={styles.authText}>Sign Out</Text></Pressable> 
