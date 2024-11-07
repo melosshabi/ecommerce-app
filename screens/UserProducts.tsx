@@ -115,6 +115,7 @@ export default function UserProducts() {
             if(data.msg === 'product-updated'){
                 setNotifText("Quantity Updated")
                 startNotifAnim()
+                
             }
         }, 1000)
     }

@@ -75,7 +75,8 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
           {user && 
           <Pressable onPress={() => navigation.navigate("PostProduct")} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Sell</Text>
-          </Pressable>
+          </Pressable> 
+        // 
           }
       </View>
       {
