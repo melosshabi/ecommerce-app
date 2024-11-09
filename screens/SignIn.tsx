@@ -1,11 +1,11 @@
-import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, Keyboard } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
+import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native'
+import React, { useRef, useState } from 'react'
 import colors from '../lib/colors'
 import { Formik } from 'formik'
 import * as yup from 'yup'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { useNavigation } from '@react-navigation/native'
-import { jwtDecode, JwtPayload } from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DrawerScreenProps } from '@react-navigation/drawer'
 

@@ -39,7 +39,8 @@ type ComponentProps = {
     Wishlist:undefined,
     Account:undefined,
     Orders:undefined,
-    UserProducts:undefined
+    UserProducts:undefined,
+    PostProduct:undefined
 }
 type DecodedToken = {
     _id:string,
@@ -77,4 +78,12 @@ type OrderData = {
     productPrice:number,
     totalPrice:number,
     createdAt:string
+}
+type NewProductData = {
+    productName:string,
+    brandName?:string,
+    manufacturer:string,
+    price:string
+    quantity:string,
+    // pictures:string[]
 }

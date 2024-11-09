@@ -15,10 +15,11 @@ import Account from './screens/Account';
 import Search from './screens/Search';
 import Home from './screens/Home';
 import ProductDetails from './screens/ProductDetails';
-import { jwtDecode } from 'jwt-decode';
-import { updateJWT } from './lib/lib';
 import Orders from './screens/Orders';
 import UserProducts from './screens/UserProducts';
+import PostProduct from './screens/PostProduct';
+import { jwtDecode } from 'jwt-decode';
+import { updateJWT } from './lib/lib';
 
 const dvh = Dimensions.get('screen').height
 function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolean){
@@ -74,9 +75,9 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
           </Pressable>}
           {user && 
           <Pressable onPress={() => navigation.navigate("PostProduct")} style={({pressed}) => [styles.optionButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite}: pressed ? {backgroundColor:colors.black3} : {}]}>
+            <Image style={styles.optionIcons} source={darkMode ? require("./images/money.png") : require('./images/moneyBlack.png')}/>
             <Text style={[styles.optionsText, darkMode ? {color:'white'} : {color:'black'}]}>Sell</Text>
           </Pressable> 
-        // 
           }
       </View>
       {
@@ -119,6 +120,7 @@ export default function App() {
             <Drawer.Screen name="Account" component={Account}/>
             <Drawer.Screen name="Orders" component={Orders} options={{unmountOnBlur:true}}/>
             <Drawer.Screen name="UserProducts" component={UserProducts} options={{unmountOnBlur:true}}/>
+            <Drawer.Screen name="PostProduct" component={PostProduct} options={{unmountOnBlur:true}}/>
           </Drawer.Navigator>
         </NavigationContainer>
       </SafeAreaView>
