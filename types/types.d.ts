@@ -85,5 +85,4 @@ type NewProductData = {
     manufacturer:string,
     price:string
     quantity:string,
-    // pictures:string[]
 }

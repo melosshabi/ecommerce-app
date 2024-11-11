@@ -1,4 +1,4 @@
-import { Dimensions, Image, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native'
+import { Dimensions, Image, Pressable, StyleSheet, useColorScheme, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import colors from '../lib/colors'
 import { useNavigation } from '@react-navigation/native'
@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const screen = Dimensions.get("screen")
 const dvw = screen.width
+const dvh = screen.height
 export default function Footer({currentScreen}:Footer) {
     const darkMode = useColorScheme() == 'dark'
     const navigation = useNavigation()
@@ -43,7 +44,7 @@ return (
 const styles = StyleSheet.create({
     footer:{
         width:dvw,
-        height:'8%',
+        height: dvh * 0.07,
         flexDirection:'row',
         elevation:4,
         justifyContent:'space-between',
