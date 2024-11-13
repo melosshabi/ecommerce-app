@@ -1,5 +1,5 @@
-import { StyleSheet, Text, useColorScheme, View, ScrollView, Image, Keyboard, Dimensions, LayoutChangeEvent, Alert } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
+import { StyleSheet, Text, useColorScheme, View, ScrollView, Image} from 'react-native'
+import React, { useRef, useState } from 'react'
 import colors from '../lib/colors'
 import Footer from '../components/Footer'
 import { Pressable, TextInput } from 'react-native-gesture-handler'
@@ -44,7 +44,7 @@ export default function PostProduct() {
     const pictureBase64s: string[] = []
     productPictures.forEach(picture => pictureBase64s.push(picture.base64 as string))
     const token = await AsyncStorage.getItem("session")
-    const res = await fetch(`http://192.168.0.27:3000/api/newProduct`, {
+    const res = await fetch(`${URL}/api/newProduct`, {
       method:"POST",
       headers:{
         "Mobile":"true",

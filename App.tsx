@@ -36,18 +36,18 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
   },[])
   async function logOut(){
     setUser(null)
-    await AsyncStorage.removeItem('user')
-    await AsyncStorage.removeItem('token')
+    await AsyncStorage.removeItem('session')
     navigation.closeDrawer()
+    navigation.navigate("Home", undefined)
   }
   return (
     <View style={[styles.drawer, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
       <View style={styles.avatarWrapper}>
           {user && 
             <>
-            <Image style={styles.avatar} source={!user?.profilePictureUrl ? require ("./images/avatar.png"): {uri:user.profilePictureUrl}}/>
-            <Text style={[styles.name, darkMode ? {color:'white'} : {color:'black'}]}>{user?.username}</Text>
-          </>
+              <Image style={styles.avatar} source={!user?.profilePictureUrl ? require ("./images/avatar.png"): {uri:user.profilePictureUrl}}/>
+              <Text style={[styles.name, darkMode ? {color:'white'} : {color:'black'}]}>{user?.username}</Text>
+            </>
           }
       </View>
       <View style={styles.options}>
