@@ -33,6 +33,14 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
       }
     }
     updateUserObj()
+    async function test(){
+      console.log(await AsyncStorage.getItem("wishlist"))
+    }
+    // test()
+    async function clearWishlist(){
+      await AsyncStorage.removeItem("wishlist")
+    }
+    // clearWishlist()
   },[])
   async function logOut(){
     setUser(null)

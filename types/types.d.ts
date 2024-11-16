@@ -60,11 +60,17 @@ type CartItem = {
     dateAddedToCart:Date
 }
 type WishlistItem = {
+    _id: string
     productDocId:string,
     productName:string,
     manufacturer:string,
     productPrice:number,
-    productImage:string
+    productImage:string,
+    pictures:string[]
+}
+// Type for the wishlist of unauth users
+type LocalWishlistItem = {
+    productDocId:string
 }
 type ProductExists = {
     wishlist:boolean,

@@ -61,6 +61,23 @@ export async function addToWishlist(productDocId:string){
             return true
         }
         return false
+    }else{
+        const stringWishlist = await AsyncStorage.getItem("wishlist")
+        if(stringWishlist){
+            const wishlist = JSON.parse(stringWishlist)
+            let productExists = false
+            wishlist.forEach((product:LocalWishlistItem) => {
+                if(product.productDocId === productDocId){
+                    productExists = true
+                }
+            })
+            if(productExists) return
+            wishlist.push({productDocId})
+            await AsyncStorage.setItem("wishlist", JSON.stringify(wishlist))
+        }else{
+            const wishlist = [{productDocId}]
+            await AsyncStorage.setItem("wishlist", JSON.stringify(wishlist))
+        }
     }
 }
 export async function removeFromWishlist(productDocId:string){

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, FlatList, Pressable, Image, TextInput, useColorScheme, Dimensions } from 'react-native'
+import { StyleSheet, Text, View, FlatList, Pressable, Image, useColorScheme, Dimensions } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Animated, { FadeIn, FadeInRight, FadeInUp, FadeOut, FadeOutRight, FadeOutUp, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
@@ -9,21 +9,35 @@ const dvw = Dimensions.get('screen').width
 export default function Wishlist() {
     const darkMode = useColorScheme() === 'dark'
     const [wishlist, setWishlist] = useState<WishlistItem[]>([])
+    const [auth, setAuth] = useState(false)
     useEffect(() => {
         async function getWishlist(){
             const session = await AsyncStorage.getItem("session")
-            if(!session){
-                return
-            }
-            const res = await fetch(`${process.env.URL}/api/wishlist`, {
-                method:"GET",
-                headers:{
-                    "Mobile":"true",
-                    "Authorization":`Bearer ${session}`
+            if(session){
+                setAuth(true)
+                const res = await fetch(`${process.env.URL}/api/wishlist`, {
+                    method:"GET",
+                    headers:{
+                        "Mobile":"true",
+                        "Authorization":`Bearer ${session}`
+                    }
+                })
+                const data = await res.json()
+                setWishlist([...data.wishlistItems])
+            }else{
+                const stringifiedWishlist = await AsyncStorage.getItem("wishlist")
+                if(stringifiedWishlist){
+                    const localWishlist = JSON.parse(stringifiedWishlist)
+                    const productPromises: Promise<Response>[] = []
+                    localWishlist.forEach(async (product:any) => {
+                        const promise = fetch(`http://192.168.0.27:3000/api/productDetails?_id=${product.productDocId}`)
+                        productPromises.push(promise)
+                    })
+                    Promise.all(productPromises).then(responses => {
+                        return Promise.all(responses.map(response => response.json()))
+                    }).then(data => setWishlist([...data]))
                 }
-            })
-            const data = await res.json()
-            setWishlist([...data.wishlistItems])
+            }
         }
         getWishlist()
     }, [])
@@ -41,42 +55,50 @@ export default function Wishlist() {
         productScale.value = withTiming(!deleteMode ? .9 : 1, {duration:150})
     }
     async function addOrRemoveProduct(_id:string){
+        console.log(_id)
         if(deleteMode && selectedProducts.includes(_id)){
             setSelectedProducts(prev => prev.filter(id => id !== _id))
             return
         }
         setSelectedProducts(prev => [...prev, _id])
-        console.log(selectedProducts)
-
     }
     async function deleteWishlistItems(){
         setDeleteMode(false)
         productScale.value = withTiming(1, {duration:150})
-        const filteredProducts = wishlist.filter(product => !selectedProducts.includes(product.productDocId))
+        const filteredProducts = wishlist.filter(product => !selectedProducts.includes(auth ? product.productDocId : product._id))
         setWishlist([...filteredProducts])
         const session = await AsyncStorage.getItem("session")
-        await fetch(`${process.env.URL}/api/wishlist`, {
-            method:"DELETE",
-            headers:{
-                'Mobile':'True',
-                "Authorization":`Bearer ${session}`
-            },
-            body:JSON.stringify({
-                itemsToRemove:[...selectedProducts]
+        if(session){
+            await fetch(`${process.env.URL}/api/wishlist`, {
+                method:"DELETE",
+                headers:{
+                    'Mobile':'True',
+                    "Authorization":`Bearer ${session}`
+                },
+                body:JSON.stringify({
+                    itemsToRemove:[...selectedProducts]
+                })
             })
-        })
-        setSelectedProducts([])
+            setSelectedProducts([])
+        }else{
+            const newWishlist:LocalWishlistItem[] = []
+            filteredProducts.forEach(product => {
+                newWishlist.push({productDocId:product._id})
+            })
+            await AsyncStorage.setItem("wishlist", JSON.stringify(newWishlist))
+        }
     }
 return (
     <View style={[styles.wishlist, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
+        {wishlist.length === 0 ? <Text style={[styles.title, darkMode ? {color:'white'} : {color:'black'}]}>Your wishlist is empty</Text> :
         <FlatList
             style={{width:dvw}}
             contentContainerStyle={{alignItems:'center'}}
             data={wishlist}
             renderItem={({item}) => (
                 <Animated.View style={productScaleAnim}>
-                    <Pressable onPress={() => addOrRemoveProduct(item.productDocId)} onLongPress={toggleDeleteMode} style={[styles.product, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:6} : {backgroundColor:'white', shadowColor:'black', elevation:4}]}>
-                        <Image style={styles.productImage} source={{uri:item.productImage}}/>
+                    <Pressable onPress={() => addOrRemoveProduct(auth ? item.productDocId : item._id)} onLongPress={toggleDeleteMode} style={[styles.product, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:6} : {backgroundColor:'white', shadowColor:'black', elevation:4}]}>
+                        <Image style={styles.productImage} source={{uri:auth ? item.productImage : item.pictures[0]}}/>
                         <View style={styles.productDataWrapper}>
                             <Text style={[styles.name, darkMode ? {color:'white'} : {color:'black'}]}>{item.productName}</Text>
                             <Text style={[styles.manufacturer, darkMode ? {color:'white'} : {color:'black'}]}>{item.manufacturer}</Text>
@@ -84,13 +106,13 @@ return (
                         </View>
                         {deleteMode &&
                             <Animated.View entering={FadeInUp} exiting={FadeOutUp} style={[styles.checkmarkWrapper, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
-                                {selectedProducts.includes(item.productDocId) &&<Animated.Image entering={FadeIn.duration(100)} exiting={FadeOut.duration(100)}  style={styles.checkmark} source={darkMode? require('../images/checkmark.png') : require("../images/checkmarkBlack.png")}/>}
+                                {selectedProducts.includes(auth ? item.productDocId : item._id) &&<Animated.Image entering={FadeIn.duration(100)} exiting={FadeOut.duration(100)}  style={styles.checkmark} source={darkMode? require('../images/checkmark.png') : require("../images/checkmarkBlack.png")}/>}
                             </Animated.View>
                         }
                     </Pressable>
                 </Animated.View>
             )}
-        />
+        />}
         {selectedProducts.length > 0 && deleteMode &&
                 <APressable onPress={() => deleteWishlistItems()} entering={FadeInRight.duration(150)} exiting={FadeOutRight.duration(150)}  style={[styles.deleteButton, darkMode ? {borderColor:'white'} : {borderColor:'black'}]}>
                     <Image style={styles.trashIcon} source={require("../images/trash.png")}/>
@@ -101,9 +123,14 @@ return (
 )}
 
 const styles = StyleSheet.create({
+    title:{
+        fontSize:25,
+        fontFamily:"WorkSans-Medium",
+        marginTop:'10%'
+    },
     wishlist:{
         height:'100%',
-        justifyContent:'center',
+        justifyContent:'space-between',
         alignItems:'center'
     },
     product:{

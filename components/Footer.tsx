@@ -38,6 +38,10 @@ return (
         {auth &&<Pressable onPress={() => navigation.navigate("Account")} style={({pressed}) => [styles.buttons, {marginRight:5}, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}, currentScreen === "Account" && darkMode ? {backgroundColor:colors.transparentWhite} : currentScreen === "Account" && {backgroundColor:colors.black3} ]}>
             <Image style={[styles.icons]} source={darkMode ? require("../images/user.png") : require("../images/userBlack.png")}/>
         </Pressable>}
+        {/* @ts-ignore */}
+        {!auth && <Pressable onPress={() => navigation.navigate("Wishlist")} style={({pressed}) => [styles.buttons, {marginRight:5}, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}, currentScreen === "Account" && darkMode ? {backgroundColor:colors.transparentWhite} : currentScreen === "Account" && {backgroundColor:colors.black3} ]}>
+            <Image style={[styles.icons]} source={darkMode ? require("../images/heart.png") : require("../images/heartBlack.png")}/>
+        </Pressable>}
     </View>
 )}
 
