@@ -77,6 +77,7 @@ export async function addToWishlist(productDocId:string){
         }else{
             const wishlist = [{productDocId}]
             await AsyncStorage.setItem("wishlist", JSON.stringify(wishlist))
+            return true
         }
     }
 }

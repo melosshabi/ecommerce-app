@@ -1,9 +1,11 @@
-import { StyleSheet, Text, View, FlatList, Pressable, Image, useColorScheme, Dimensions } from 'react-native'
+import { StyleSheet, Text, View, FlatList, Pressable, Image, useColorScheme, Dimensions, BackHandler } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Animated, { FadeIn, FadeInRight, FadeInUp, FadeOut, FadeOutRight, FadeOutUp, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import colors from '../lib/colors'
 import Footer from '../components/Footer'
+import {URL} from "@env"
+import { useNavigation } from '@react-navigation/native'
 
 const dvw = Dimensions.get('screen').width
 export default function Wishlist() {
@@ -30,7 +32,7 @@ export default function Wishlist() {
                     const localWishlist = JSON.parse(stringifiedWishlist)
                     const productPromises: Promise<Response>[] = []
                     localWishlist.forEach(async (product:any) => {
-                        const promise = fetch(`http://192.168.0.27:3000/api/productDetails?_id=${product.productDocId}`)
+                        const promise = fetch(`${URL}/api/productDetails?_id=${product.productDocId}`)
                         productPromises.push(promise)
                     })
                     Promise.all(productPromises).then(responses => {
@@ -55,7 +57,6 @@ export default function Wishlist() {
         productScale.value = withTiming(!deleteMode ? .9 : 1, {duration:150})
     }
     async function addOrRemoveProduct(_id:string){
-        console.log(_id)
         if(deleteMode && selectedProducts.includes(_id)){
             setSelectedProducts(prev => prev.filter(id => id !== _id))
             return
@@ -88,6 +89,16 @@ export default function Wishlist() {
             await AsyncStorage.setItem("wishlist", JSON.stringify(newWishlist))
         }
     }
+    const navigation = useNavigation()
+    BackHandler.addEventListener("hardwareBackPress", () => {
+        if(deleteMode){
+            setDeleteMode(false)
+            productScale.value = withTiming(1, {duration:150})
+            setSelectedProducts([])
+            return true
+        }
+        navigation.goBack()
+    })
 return (
     <View style={[styles.wishlist, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
         {wishlist.length === 0 ? <Text style={[styles.title, darkMode ? {color:'white'} : {color:'black'}]}>Your wishlist is empty</Text> :
