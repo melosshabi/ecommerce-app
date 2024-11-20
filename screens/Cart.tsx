@@ -1,31 +1,46 @@
-import { StyleSheet, Text, View, Dimensions, useColorScheme, Image, TextInput, Pressable, Keyboard, BackHandler } from 'react-native'
+import { StyleSheet, Text, View, Dimensions, useColorScheme, Image, TextInput, Pressable, BackHandler } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Footer from '../components/Footer'
 import colors from '../lib/colors'
 import { FlatList } from 'react-native-gesture-handler'
-import Animated, { Easing, FadeIn, FadeInRight, FadeInUp, FadeOut, FadeOutRight, FadeOutUp, FlipOutXUp, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated'
+import Animated, { Easing, FadeIn, FadeInRight, FadeInUp, FadeOut, FadeOutRight, FadeOutUp, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { URL } from '@env'
 
 const dvw = Dimensions.get("screen").width
 export default function Cart() {
     const darkMode = useColorScheme() === 'dark'
     const [cart, setCart] = useState<CartItem[]>([])
+    const [auth, setAuth] = useState(false)
     useEffect(() => {
         async function getCartList(){
             const session = await AsyncStorage.getItem("session")
-            if(!session){
-                return
+            if(session){
+                setAuth(true)
+                const res = await fetch(`${URL}/api/editCart`, {
+                    method:"GET",
+                    headers:{
+                        'Authorization':`Bearer ${session}`,
+                        'Mobile':'true'
+                    }
+                })
+                const cartItems = await res.json()
+                setCart([...cartItems.cartProducts])
             }
-            const res = await fetch(`${URL}/api/editCart`, {
-                method:"GET",
-                headers:{
-                    'Authorization':`Bearer ${session}`,
-                    'Mobile':'true'
+            else{
+                const stringCart = await AsyncStorage.getItem("cart")
+                if(stringCart){
+                    const localCart = JSON.parse(stringCart)
+                    const productPromises: Promise<Response>[] = []
+                    localCart.forEach(async (product:any) => {
+                        const promise = fetch(`${URL}/api/productDetails?_id=${product.productDocId}`)
+                        productPromises.push(promise)
+                    })
+                    Promise.all(productPromises).then(responses => {
+                        return Promise.all(responses.map(response => response.json()))
+                    }).then(data => setCart([...data]))
                 }
-            })
-            const cartItems = await res.json()
-            setCart([...cartItems.cartProducts])
+            }
         }
         getCartList()
     },[])
@@ -160,7 +175,7 @@ return (
                 renderItem={({item}) => (
                     <Animated.View style={productScaleAnim}>
                         <Pressable onPress={() => addOrRemoveProduct(item._id)} onLongPress={toggleDeleteMode} style={[styles.product, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:6} : {backgroundColor:'white', shadowColor:'black', elevation:4}]}>
-                            <Image style={styles.productImage} source={{uri:item.productImage}}/>
+                            <Image style={styles.productImage} source={{uri:auth ? item.productImage : item.pictures[0]}}/>
                             <View style={styles.productDataWrapper}>
                                     <Text style={[styles.name, darkMode ? {color:'white'} : {color:'black'}]}>{item.productName}</Text>
                                     <Text style={[styles.manufacturer, darkMode ? {color:'white'} : {color:'black'}]}>{item.manufacturer}</Text>

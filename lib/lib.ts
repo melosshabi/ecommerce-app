@@ -21,6 +21,25 @@ export async function addToCart(productDocId:string, desiredQuantity:number){
             return true
         }
         return false
+    }else{
+        const stringCart = await AsyncStorage.getItem("cart")
+        if(stringCart){
+            const cart = JSON.parse(stringCart)
+            let productExists = false
+            cart.forEach((product:LocalWishlistItem) => {
+                if(product.productDocId === productDocId){
+                    productExists = true
+                }
+            })
+            if(productExists) return
+            cart.push({productDocId, desiredQuantity})
+            await AsyncStorage.setItem("cart", JSON.stringify(cart))
+            return true
+        }else{
+            const cart = [{productDocId, desiredQuantity}]
+            await AsyncStorage.setItem("cart", JSON.stringify(cart))
+            return true
+        }
     }
 }
 export async function removeFromCart(productDocId:string){
@@ -74,6 +93,7 @@ export async function addToWishlist(productDocId:string){
             if(productExists) return
             wishlist.push({productDocId})
             await AsyncStorage.setItem("wishlist", JSON.stringify(wishlist))
+            return true
         }else{
             const wishlist = [{productDocId}]
             await AsyncStorage.setItem("wishlist", JSON.stringify(wishlist))

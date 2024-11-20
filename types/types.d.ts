@@ -57,7 +57,8 @@ type CartItem = {
     productPrice:number,
     availableQuantity:number,
     desiredQuantity:number,
-    dateAddedToCart:Date
+    dateAddedToCart:Date,
+    pictures:string[]
 }
 type WishlistItem = {
     _id: string
