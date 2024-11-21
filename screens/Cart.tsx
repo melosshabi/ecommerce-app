@@ -6,12 +6,14 @@ import colors from '../lib/colors'
 import { FlatList } from 'react-native-gesture-handler'
 import Animated, { Easing, FadeIn, FadeInRight, FadeInUp, FadeOut, FadeOutRight, FadeOutUp, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { URL } from '@env'
+import { useNavigation } from '@react-navigation/native'
 
 const dvw = Dimensions.get("screen").width
 export default function Cart() {
     const darkMode = useColorScheme() === 'dark'
     const [cart, setCart] = useState<CartItem[]>([])
     const [auth, setAuth] = useState(false)
+    const navigation = useNavigation()
     useEffect(() => {
         async function getCartList(){
             const session = await AsyncStorage.getItem("session")
@@ -31,19 +33,32 @@ export default function Cart() {
                 const stringCart = await AsyncStorage.getItem("cart")
                 if(stringCart){
                     const localCart = JSON.parse(stringCart)
+                    // return
                     const productPromises: Promise<Response>[] = []
-                    localCart.forEach(async (product:any) => {
-                        const promise = fetch(`${URL}/api/productDetails?_id=${product.productDocId}`)
+                    localCart.forEach(async (product:LocalCartItem) => {
+                        const promise = fetch(`http://192.168.0.25:3000/api/productDetails?_id=${product.productDocId}&desiredQuantity=${product.desiredQuantity}`)
                         productPromises.push(promise)
                     })
                     Promise.all(productPromises).then(responses => {
                         return Promise.all(responses.map(response => response.json()))
-                    }).then(data => setCart([...data]))
+                    }).then(data => {
+                        setCart([...data])
+                    })
                 }
             }
         }
         getCartList()
     },[])
+    BackHandler.addEventListener("hardwareBackPress", () => {
+        if(deleteMode){
+            setDeleteMode(false)
+            productScale.value = withTiming(1, {duration:150})
+            setSelectedProducts([])
+            return true
+        }
+        navigation.goBack()
+    })
+
     const [showQuantityError, setShowQuantityError] = useState(false)
     const errorProgressBarWidth = useSharedValue('100%')
     // @ts-ignore
@@ -77,46 +92,68 @@ export default function Cart() {
             }, 3000)
             setErrorTimeout(errTimeout)
             const session = await AsyncStorage.getItem("session")
-            await fetch(`${URL}/api/editCart`, {
-                method:"PATCH",
-                headers:{
-                    "Authorization": `Bearer ${session}`,
-                    "Mobile":"true"
-                },
-                body:JSON.stringify({
-                    productDocId:productId,
-                    quantity:availableQuantity
+            if(session){
+                await fetch(`${URL}/api/editCart`, {
+                    method:"PATCH",
+                    headers:{
+                        "Authorization": `Bearer ${session}`,
+                        "Mobile":"true",
+                        "Action":"update-stock"
+                    },
+                    body:JSON.stringify({
+                        productDocId:productId,
+                        quantity:availableQuantity
+                    })
                 })
-            })
+            }else{
+                const tempCart = [...cart]
+                const cartToSaveLocally: LocalCartItem[] = []
+                tempCart.forEach(product => {
+                    if(product._id === productId){
+                        product.desiredQuantity = availableQuantity
+                    }
+                    cartToSaveLocally.push({productDocId:product._id, desiredQuantity:product.desiredQuantity})
+                })
+                console.log(cartToSaveLocally)
+                await AsyncStorage.setItem('cart', JSON.stringify(cartToSaveLocally))
+            }
             return
         }
         if(action === QuantityActions.dec && currentDesiredQuantity - 1 === 0) return
 
         const products = [...cart]
-            products.forEach(product => {
-                if(product._id === productId){
-                    action === QuantityActions.inc ? 
-                    product.desiredQuantity += 1 :
-                    product.desiredQuantity -= 1
-                }
-            })
-            setCart([...products])
+        const cartToSaveLocally: LocalCartItem[] = []
+        products.forEach(product => {
+            if(product._id === productId){
+                action === QuantityActions.inc ? 
+                product.desiredQuantity += 1 :
+                product.desiredQuantity -= 1
+            }
+            if(!auth){
+                cartToSaveLocally.push({productDocId:product._id, desiredQuantity: product.desiredQuantity > 0 ? product.desiredQuantity : 1})
+            }
+        })
+        await AsyncStorage.setItem('cart', JSON.stringify(cartToSaveLocally))
+        setCart([...products])
 
-        const timeout = setTimeout(async () => {
-            const session = await AsyncStorage.getItem("session")
-            await fetch(`${URL}/api/editCart`, {
-                method:"PATCH",
-                headers:{
-                    "Authorization": `Bearer ${session}`,
-                    "Mobile":"true"
-                },
-                body:JSON.stringify({
-                    productDocId:productId,
-                    quantity:action === QuantityActions.inc ? currentDesiredQuantity += 1 : currentDesiredQuantity -= 1
+        const session = await AsyncStorage.getItem("session")
+        if(session){
+            const timeout = setTimeout(async () => {
+                await fetch(`${URL}/api/editCart`, {
+                    method:"PATCH",
+                    headers:{
+                        "Authorization": `Bearer ${session}`,
+                        "Mobile":"true",
+                        "Action":"update-stock"
+                    },
+                    body:JSON.stringify({
+                        productDocId:productId,
+                        quantity:action === QuantityActions.inc ? currentDesiredQuantity += 1 : currentDesiredQuantity -= 1
+                    })
                 })
-            })
-        }, 500)
-        setQuantityTimeout(timeout)
+            }, 500)
+            setQuantityTimeout(timeout)
+        }
     }
 
     const [deleteMode, setDeleteMode] = useState(false)
@@ -143,18 +180,28 @@ export default function Cart() {
         setDeleteMode(false)
         productScale.value = withTiming(1, {duration:150})
         const filteredProducts = cart.filter(product => !selectedProducts.includes(product._id))
+        if(!auth){
+            const cartToSaveLocally: LocalCartItem[] = []
+            filteredProducts.forEach(product => {
+                cartToSaveLocally.push({productDocId:product._id, desiredQuantity:product.desiredQuantity})
+            })
+            await AsyncStorage.setItem('cart', JSON.stringify(cartToSaveLocally))
+        }
+        
         setCart([...filteredProducts])
         const session = await AsyncStorage.getItem("session")
-        await fetch(`${URL}/api/editCart`, {
-            method:"DELETE",
-            headers:{
-                'Mobile':'True',
-                "Authorization":`Bearer ${session}`
-            },
-            body:JSON.stringify({
-                itemsToRemove:[...selectedProducts]
+        if(session){
+            await fetch(`${URL}/api/editCart`, {
+                method:"DELETE",
+                headers:{
+                    'Mobile':'True',
+                    "Authorization":`Bearer ${session}`
+                },
+                body:JSON.stringify({
+                    itemsToRemove:[...selectedProducts]
+                })
             })
-        })
+        }
         setSelectedProducts([])
     }
     useEffect(() => {
@@ -182,11 +229,11 @@ return (
                                 <View style={styles.priceStockWrapper}>
                                     <Text style={[styles.price, darkMode ? {color:'white'} : {color:'black'}]}>{item.productPrice}€</Text>
                                     <View style={styles.stockWrapper}>
-                                        <Pressable disabled={deleteMode} onPress={() => updateQuantity(item._id, QuantityActions.dec, item.desiredQuantity, item.availableQuantity)} style={({pressed}) => [styles.quantityButtons, darkMode && pressed ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
+                                        <Pressable disabled={deleteMode} onPress={() => updateQuantity(item._id, QuantityActions.dec, item.desiredQuantity, item.quantity)} style={({pressed}) => [styles.quantityButtons, darkMode && pressed ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
                                             <Image style={styles.stockIcons} source={darkMode ? require('../images/minus.png') : require("../images/minusBlack.png")}/>
                                         </Pressable>
                                         <TextInput style={[styles.quantityInput, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:4, color:'white'} : {backgroundColor:'white', shadowColor:'black', elevation:4, color:'black'}]} value={item.desiredQuantity.toString()} editable={false}></TextInput>
-                                        <Pressable disabled={deleteMode} onPress={() => updateQuantity(item._id, QuantityActions.inc, item.desiredQuantity, item.availableQuantity)} style={({pressed}) => [styles.quantityButtons, darkMode && pressed ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
+                                        <Pressable disabled={deleteMode} onPress={() => updateQuantity(item._id, QuantityActions.inc, item.desiredQuantity, item.quantity)} style={({pressed}) => [styles.quantityButtons, darkMode && pressed ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
                                             <Image style={styles.stockIcons} source={darkMode ? require('../images/plus.png') : require("../images/plusBlack.png")}/>
                                         </Pressable>
                                     </View>

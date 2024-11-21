@@ -55,7 +55,8 @@ type CartItem = {
     productImage:string,
     manufacturer:string,
     productPrice:number,
-    availableQuantity:number,
+    // Avaiable quantity of a product
+    quantity:number,
     desiredQuantity:number,
     dateAddedToCart:Date,
     pictures:string[]
@@ -72,6 +73,10 @@ type WishlistItem = {
 // Type for the wishlist of unauth users
 type LocalWishlistItem = {
     productDocId:string
+}
+type LocalCartItem = {
+    productDocId:string,
+    desiredQuantity:number
 }
 type ProductExists = {
     wishlist:boolean,
