@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native'
 import { jwtDecode } from "jwt-decode";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DrawerScreenProps } from '@react-navigation/drawer'
+import { URL } from '@env'
 
 const dvw = Dimensions.get('window').width
 const dvh = Dimensions.get('window').height
@@ -54,7 +55,7 @@ export default function Signin({route}:SignInParams) {
     const [authInProgress, setAuthInProgress] = useState(false)
     async function signIn(username:string, password:string){
         setAuthInProgress(true)
-        const req = await fetch(`${process.env.URL}/api/mobileAuth`, {
+        const req = await fetch(`${URL}/api/mobileAuth`, {
             method:"POST",
             body:JSON.stringify({username, password})
         })

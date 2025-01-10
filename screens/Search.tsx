@@ -4,17 +4,16 @@ import Footer from '../components/Footer'
 import colors from '../lib/colors'
 import { FlatList } from 'react-native-gesture-handler'
 import Product from '../components/Product'
-import { useNavigation } from '@react-navigation/native'
 import Animated, { Easing, FadeInRight, FadeOutRight, useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated'
+import { URL } from '@env'
 
 export default function Search() {
-    const navigation = useNavigation()
     const darkMode = useColorScheme() === 'dark'
     const [query, setQuery] = useState("")
     const [products, setProducts] = useState<Product[]>([])
 
     async function searchProduct(){
-        const res = await fetch(`${process.env.URL}/api/searchProducts?userQuery=${query}`)
+        const res = await fetch(`${URL}/api/searchProducts?userQuery=${query}`)
         const data = await res.json()
         setProducts([...data.products])
     }

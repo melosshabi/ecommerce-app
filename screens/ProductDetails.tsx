@@ -1,12 +1,14 @@
-import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, ScrollView } from 'react-native'
+import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, ScrollView, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { DrawerScreenProps } from '@react-navigation/drawer'
-import {URL} from "@env"
+import {URL, STRIPE_PUBLISHABLE_KEY} from "@env"
 import colors from '../lib/colors'
 import Footer from '../components/Footer'
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming, } from 'react-native-reanimated'
 import { addToCart, addToWishlist, removeFromCart, removeFromWishlist } from '../lib/lib'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { StripeProvider, useStripe } from '@stripe/stripe-react-native'
+import { useNavigation } from '@react-navigation/native'
 
 type ProductDetails = DrawerScreenProps<ComponentProps, 'ProductDetails'>
 const dvh = Dimensions.get("screen").height
@@ -212,56 +214,131 @@ export default function ProductDetails({route}:ProductDetails) {
         progressBarWidth.value = '100%'
       }, 3500)
     }
+    const navigation = useNavigation()
+    const {initPaymentSheet, presentPaymentSheet} = useStripe()
+    async function fetchPaymentSheetParams(){
+      const token = await AsyncStorage.getItem("session")
+      const res = await fetch(`http://10.0.2.2:3000/api/orders`, {
+        method:"POST",
+        headers:{
+          "Mobile":"true",
+          "Authorization":`Bearer ${token}`
+        },
+        body:JSON.stringify({products:[{price:productData?.productPrice}]})
+      })
+      const data = await res.json()
+      if(data.responseMessage === "jwt-expired"){
+        Alert.alert("Session expired", "You need to sign in again", [
+          {
+            text:"Ok",
+            style:"default",
+            onPress:async () => {
+                await AsyncStorage.removeItem("session")
+                // @ts-ignore
+                navigation.navigate("SignIn")
+            }
+          }
+        ])
+      }
+      const {paymentIntent, ephemeralKey} = data
+      return {paymentIntent, ephemeralKey}
+    }
+    async function initializePaymentSheet(){
+      const {paymentIntent, ephemeralKey} = await fetchPaymentSheetParams()
+      await initPaymentSheet({
+        merchantDisplayName:"Mela Ecommerce",
+        customerEphemeralKeySecret:ephemeralKey,
+        paymentIntentClientSecret:paymentIntent,
+      })
+      const {error} = await presentPaymentSheet()
+      if(error){
+        Alert.alert("Something went wrong", "An unkown error occurred while trying to process your payment" ,[
+          {
+            text:"Ok",
+            style:'default',
+            onPress: () => {}
+          }
+        ])
+        return
+      }
+      const session = await AsyncStorage.getItem('session')
+      const res = await fetch(`http://10.0.2.2:3000/api/finishOrder`, {
+        method:"POST",
+        headers:{
+          "Mobile":'true',
+          "Authorization":`Bearer ${session}`,
+        }
+      })
+      const data = await res.json()
+      if(data.responseMessage === "jwt-expired"){
+        Alert.alert("Session expired", "You need to sign in again", [
+          {
+            text:"Ok",
+            style:"default",
+            onPress:async () => {
+                await AsyncStorage.removeItem("session")
+                // @ts-ignore
+                navigation.navigate("SignIn")
+            }
+          }
+        ])
+      }else if(data.responseMessage === 'order-placed'){
+        setAlertMessage("Order successful")
+        showAlert()
+      }
+    }
   return (
-    <Animated.View style={[styles.productPage, darkMode && {backgroundColor:colors.black}]}>
-      <ScrollView>
-      <View>
-        <View style={styles.slider}>
-          <Pressable onPress={() => changeVisibleImage(activeImageIndex - 1)} style={({pressed}) => [styles.arrowButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
-            <Image style={[styles.arrows, styles.leftArrow]} source={darkMode ? require('../images/arrow.png') : require("../images/arrowBlack.png")}/>
-          </Pressable>
-          <View style={styles.imagesWrapper}>
-            <Animated.Image style={[styles.productImages,{zIndex:2}, picture1AnimStyle, darkMode ? {shadowColor:"white"} : {shadowColor:'black'}]} source={{uri:productData?.pictures[0]}}/>
-            <Animated.Image style={[styles.productImages,{zIndex:1}, picture2AnimStyle, darkMode ? {shadowColor:"white"} : {shadowColor:'black'}]} source={{uri:productData?.pictures[1]}}/>
-            <Animated.Image style={[styles.productImages,{zIndex:0}, picture3AnimStyle, darkMode ? {shadowColor:"white"} : {shadowColor:'black'}]} source={{uri:productData?.pictures[2]}}/>
+    <StripeProvider publishableKey={STRIPE_PUBLISHABLE_KEY}>
+      <Animated.View style={[styles.productPage, darkMode && {backgroundColor:colors.black}]}>
+        <ScrollView>
+        <View>
+          <View style={styles.slider}>
+            <Pressable onPress={() => changeVisibleImage(activeImageIndex - 1)} style={({pressed}) => [styles.arrowButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
+              <Image style={[styles.arrows, styles.leftArrow]} source={darkMode ? require('../images/arrow.png') : require("../images/arrowBlack.png")}/>
+            </Pressable>
+            <View style={styles.imagesWrapper}>
+              <Animated.Image style={[styles.productImages,{zIndex:2}, picture1AnimStyle, darkMode ? {shadowColor:"white"} : {shadowColor:'black'}]} source={{uri:productData?.pictures[0]}}/>
+              <Animated.Image style={[styles.productImages,{zIndex:1}, picture2AnimStyle, darkMode ? {shadowColor:"white"} : {shadowColor:'black'}]} source={{uri:productData?.pictures[1]}}/>
+              <Animated.Image style={[styles.productImages,{zIndex:0}, picture3AnimStyle, darkMode ? {shadowColor:"white"} : {shadowColor:'black'}]} source={{uri:productData?.pictures[2]}}/>
+            </View>
+            <Pressable onPress={() => changeVisibleImage(activeImageIndex + 1)} style={({pressed}) => [styles.arrowButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
+              <Image style={[styles.arrows, styles.rightArrow]} source={darkMode ? require('../images/arrow.png') : require("../images/arrowBlack.png")}/>
+            </Pressable>
           </View>
-          <Pressable onPress={() => changeVisibleImage(activeImageIndex + 1)} style={({pressed}) => [styles.arrowButtons, pressed && darkMode ? {backgroundColor:colors.transparentWhite} : pressed && {backgroundColor:colors.black3}]}>
-            <Image style={[styles.arrows, styles.rightArrow]} source={darkMode ? require('../images/arrow.png') : require("../images/arrowBlack.png")}/>
+          <View style={styles.circlesWrapper}>
+            <Animated.View style={[styles.circles, circle1AnimStyle]}></Animated.View>
+            {productData?.pictures[1] && <Animated.View style={[styles.circles, circle2AnimStyle]}></Animated.View>}
+            {productData?.pictures[2] && <Animated.View style={[styles.circles, circle3AnimStyle]}></Animated.View>}
+          </View>
+        </View>
+        <View style={styles.productDetails}>
+          <Text style={[styles.productName, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.productName}</Text>
+          <Text style={[styles.manufacturer, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.manufacturer}</Text>
+          <Text style={[styles.price, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.productPrice}€</Text>
+          <Text style={[styles.stock, darkMode ? {color:'white'} : {color:'black'}]}>In Stock: {productData?.quantity}</Text>
+          <AInput onBlur={() => handleQuantityInputFocus(false)} onFocus={() => handleQuantityInputFocus(true)} style={[styles.quantityInput, inputBorderAnim, darkMode ? {color:'white'} : {color:'black'}]} keyboardType='number-pad' defaultValue={desiredQuantity} onChangeText={text => quantity = text} onEndEditing={() => setDesiredQuantity(quantity)}/>
+          {quantityError && <Text style={styles.quantityError}>Quantity too high</Text>}
+          <Pressable onPress={() => handleListChanges("Cart")} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
+            <Text style={styles.productButtonsText}>{!productExists?.cart ? 'Add To Cart' : 'Remove from cart'}</Text>
+            <Image style={styles.buttonIcons} source={require("../images/cart.png")}/>
           </Pressable>
+          <Pressable onPress={() => handleListChanges("Wishlist")} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
+            <Text style={styles.productButtonsText}>{!productExists?.wishlist ? 'Add To Wishlist' : 'Remove from wishlist'}</Text>
+            <Image style={styles.buttonIcons} source={require('../images/heart.png')}/>
+          </Pressable>
+          <Pressable onPress={initializePaymentSheet} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}><Text style={styles.productButtonsText}>Order Now</Text><Image style={styles.buttonIcons} source={require("../images/checkmark.png")}/></Pressable>
         </View>
-        <View style={styles.circlesWrapper}>
-          <Animated.View style={[styles.circles, circle1AnimStyle]}></Animated.View>
-          {productData?.pictures[1] && <Animated.View style={[styles.circles, circle2AnimStyle]}></Animated.View>}
-          {productData?.pictures[2] && <Animated.View style={[styles.circles, circle3AnimStyle]}></Animated.View>}
-        </View>
-      </View>
-      <View style={styles.productDetails}>
-        <Text style={[styles.productName, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.productName}</Text>
-        <Text style={[styles.manufacturer, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.manufacturer}</Text>
-        <Text style={[styles.price, darkMode ? {color:'white'} : {color:'black'}]}>{productData?.productPrice}€</Text>
-        <Text style={[styles.stock, darkMode ? {color:'white'} : {color:'black'}]}>In Stock: {productData?.quantity}</Text>
-        <AInput onBlur={() => handleQuantityInputFocus(false)} onFocus={() => handleQuantityInputFocus(true)} style={[styles.quantityInput, inputBorderAnim, darkMode ? {color:'white'} : {color:'black'}]} keyboardType='number-pad' defaultValue={desiredQuantity} onChangeText={text => quantity = text} onEndEditing={() => setDesiredQuantity(quantity)}/>
-        {quantityError && <Text style={styles.quantityError}>Quantity too high</Text>}
-        <Pressable onPress={() => handleListChanges("Cart")} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
-          <Text style={styles.productButtonsText}>{!productExists?.cart ? 'Add To Cart' : 'Remove from cart'}</Text>
-          <Image style={styles.buttonIcons} source={require("../images/cart.png")}/>
-        </Pressable>
-        <Pressable onPress={() => handleListChanges("Wishlist")} style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}>
-          <Text style={styles.productButtonsText}>{!productExists?.wishlist ? 'Add To Wishlist' : 'Remove from wishlist'}</Text>
-          <Image style={styles.buttonIcons} source={require('../images/heart.png')}/>
-        </Pressable>
-        <Pressable style={({pressed}) => [styles.productButtons, darkMode ? {shadowColor:'white', elevation:4} : {shadowColor:'black', elevation:4}, pressed && {backgroundColor:colors.darkerOrange}]}><Text style={styles.productButtonsText}>Order Now</Text><Image style={styles.buttonIcons} source={require("../images/checkmark.png")}/></Pressable>
-      </View>
-      </ScrollView>
-      <Animated.View style={[styles.alert, alertAnim, darkMode ? {backgroundColor:colors.black, borderWidth:1, borderColor:'white'} : {backgroundColor:'white', borderWidth:1, borderColor:'black'}]}>
-        <View style={styles.checkmarkTextWrapper}>
-          <Image style={styles.checkmark} source={darkMode ? require("../images/checkmark.png") : require('../images/checkmarkBlack.png')}/>
-          <Text style={[styles.alertText, darkMode ? {color:'white'} : {color:'black'}]}>{alertMessage}</Text>
-        </View>
-        <Animated.View style={progressBar}></Animated.View>
+        </ScrollView>
+        <Animated.View style={[styles.alert, alertAnim, darkMode ? {backgroundColor:colors.black, borderWidth:1, borderColor:'white'} : {backgroundColor:'white', borderWidth:1, borderColor:'black'}]}>
+          <View style={styles.checkmarkTextWrapper}>
+            <Image style={styles.checkmark} source={darkMode ? require("../images/checkmark.png") : require('../images/checkmarkBlack.png')}/>
+            <Text style={[styles.alertText, darkMode ? {color:'white'} : {color:'black'}]}>{alertMessage}</Text>
+          </View>
+          <Animated.View style={progressBar}></Animated.View>
+        </Animated.View>
+        <Footer currentScreen={undefined}/>
       </Animated.View>
-      <Footer currentScreen={undefined}/>
-    </Animated.View>
+    </StripeProvider>
   )
 }
 

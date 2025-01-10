@@ -17,7 +17,7 @@ export default function Wishlist() {
             const session = await AsyncStorage.getItem("session")
             if(session){
                 setAuth(true)
-                const res = await fetch(`${process.env.URL}/api/wishlist`, {
+                const res = await fetch(`${URL}/api/wishlist`, {
                     method:"GET",
                     headers:{
                         "Mobile":"true",
@@ -70,7 +70,7 @@ export default function Wishlist() {
         setWishlist([...filteredProducts])
         const session = await AsyncStorage.getItem("session")
         if(session){
-            await fetch(`${process.env.URL}/api/wishlist`, {
+            await fetch(`${URL}/api/wishlist`, {
                 method:"DELETE",
                 headers:{
                     'Mobile':'True',

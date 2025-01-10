@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native'
 import { jwtDecode } from "jwt-decode";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DrawerScreenProps } from '@react-navigation/drawer'
+import { URL } from '@env'
 
 const dvw = Dimensions.get('window').width
 const dvh = Dimensions.get('window').height
@@ -68,7 +69,7 @@ export default function Signup({route}:SignUpParams) {
     }
     const [authErr, setAuthErr] = useState("")
     async function signUp(username:string, email:string, password:string){
-        const req = await fetch(`${process.env.URL}/api/signup`, {
+        const req = await fetch(`${URL}/api/signup`, {
             method:"POST",
             headers:{
                 "Mobile":"true"

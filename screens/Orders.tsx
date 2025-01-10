@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getMonthString } from '../lib/lib'
 import Footer from '../components/Footer'
+import { URL } from '@env'
 
 export default function Orders() {
   const darkMode = useColorScheme() === 'dark'
@@ -19,7 +20,7 @@ export default function Orders() {
         // @ts-ignore
         navigation.navigate("SignIn", undefined)
       }
-      const res = await fetch(`http://10.0.2.2:3000/api/orders`,
+      const res = await fetch(`${URL}/api/orders`,
         {
           signal:controller.signal,
           headers:{
