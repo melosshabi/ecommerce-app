@@ -126,11 +126,11 @@ export default function Account() {
     if(focused && input === inputs.username){
       usernameBorderColor.value = withTiming(colors.orange, {duration:150})
     }else if(!focused && input === inputs.username){
-      usernameBorderColor.value = withTiming('black', {duration:150})
+      usernameBorderColor.value = withTiming(darkMode ? 'white' : 'black', {duration:150})
     }else if(focused && input === inputs.email){
       emailBorderColor.value = withTiming(colors.orange, {duration:150})
     }else if(!focused && input === inputs.email){
-      emailBorderColor.value = withTiming('black', {duration:150})
+      emailBorderColor.value = withTiming(darkMode ? 'white' : 'black', {duration:150})
     }
   }
   const profileSchema = yup.object().shape({

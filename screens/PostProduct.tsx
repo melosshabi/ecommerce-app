@@ -92,7 +92,7 @@ export default function PostProduct() {
                     editable={!uploadInProgress}
                     // @ts-ignore
                     onSubmitEditing={() => brandNameRef.current.focus()} 
-                    returnKeyType="next" value={values.productName} onChangeText={handleChange('productName')} style={[darkMode ? {borderBottomWidth:1, borderBottomColor:'white'} : {borderBottomWidth:1, borderBottomColor:'black'}]}/>
+                    returnKeyType="next" value={values.productName} onChangeText={handleChange('productName')} style={[darkMode ? {color:"white", borderBottomWidth:1, borderBottomColor:'white'} : {color:"black", borderBottomWidth:1, borderBottomColor:'black'}]}/>
                     {errors.productName && <Text style={styles.errors}>{errors.productName}</Text>}
                 </View>
                 <View style={styles.inputWrappers}>
@@ -101,7 +101,7 @@ export default function PostProduct() {
                     editable={!uploadInProgress}
                     // @ts-ignore
                     onSubmitEditing={() => manufacturerRef.current.focus()}
-                    ref={brandNameRef} returnKeyType="next" value={values.brandName} onChangeText={handleChange('brandName')} style={[darkMode ? {borderBottomWidth:1, borderBottomColor:'white'} : {borderBottomWidth:1, borderBottomColor:'black'}]}/>
+                    ref={brandNameRef} returnKeyType="next" value={values.brandName} onChangeText={handleChange('brandName')} style={[darkMode ? {color:"white", borderBottomWidth:1, borderBottomColor:'white'} : {color:"black", borderBottomWidth:1, borderBottomColor:'black'}]}/>
                     {errors.brandName && <Text style={styles.errors}>{errors.brandName}</Text>}
                 </View>
                 <View style={styles.inputWrappers}>
@@ -110,7 +110,7 @@ export default function PostProduct() {
                     editable={!uploadInProgress}
                     // @ts-ignore
                     onSubmitEditing={() => priceRef.current.focus()}
-                    ref={manufacturerRef} returnKeyType="next" value={values.manufacturer} onChangeText={handleChange('manufacturer')} style={[darkMode ? {borderBottomWidth:1, borderBottomColor:'white'} : {borderBottomWidth:1, borderBottomColor:'black'}]}/>
+                    ref={manufacturerRef} returnKeyType="next" value={values.manufacturer} onChangeText={handleChange('manufacturer')} style={[darkMode ? {color:"white", borderBottomWidth:1, borderBottomColor:'white'} : {color:"black", borderBottomWidth:1, borderBottomColor:'black'}]}/>
                     {errors.manufacturer && <Text style={styles.errors}>{errors.manufacturer}</Text>}
                 </View>
                 <View style={styles.inputWrappers}>
@@ -120,12 +120,12 @@ export default function PostProduct() {
                     inputMode="numeric"
                     // @ts-ignore
                     onSubmitEditing={() => quantityRef.current.focus()}
-                    ref={priceRef} returnKeyType="next" value={values.price} onChangeText={handleChange('price')} style={[darkMode ? {borderBottomWidth:1, borderBottomColor:'white'} : {borderBottomWidth:1, borderBottomColor:'black'}]}/>
+                    ref={priceRef} returnKeyType="next" value={values.price} onChangeText={handleChange('price')} style={[darkMode ? {color:"white", borderBottomWidth:1, borderBottomColor:'white'} : {color:"black", borderBottomWidth:1, borderBottomColor:'black'}]}/>
                     {errors.price && <Text style={styles.errors}>{errors.price}</Text>}
                 </View>
                 <View style={styles.inputWrappers}>
                   <Text style={[styles.text, darkMode ? {color:'white'} : {color:'black'}]}>Quantity <Text style={styles.star}>*</Text></Text>
-                  <TextInput editable={!uploadInProgress} inputMode="numeric" enabled={!uploadInProgress} ref={quantityRef} returnKeyType="done" value={values.quantity} onChangeText={handleChange('quantity')} style={[darkMode ? {borderBottomWidth:1, borderBottomColor:'white'} : {borderBottomWidth:1, borderBottomColor:'black'}]}/>
+                  <TextInput editable={!uploadInProgress} inputMode="numeric" enabled={!uploadInProgress} ref={quantityRef} returnKeyType="done" value={values.quantity} onChangeText={handleChange('quantity')} style={[darkMode ? {color:"white", borderBottomWidth:1, borderBottomColor:'white'} : {color:"black", borderBottomWidth:1, borderBottomColor:'black'}]}/>
                   {errors.quantity && <Text style={styles.errors}>{errors.quantity}</Text>}
                 </View>
 

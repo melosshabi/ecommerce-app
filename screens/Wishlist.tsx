@@ -65,6 +65,9 @@ export default function Wishlist() {
     })
     const [deleteMode, setDeleteMode] = useState(false)
     const [selectedProducts, setSelectedProducts] = useState<string[]>([])
+    useEffect(() => {
+        console.log(selectedProducts)
+    }, [selectedProducts])
     function toggleDeleteMode(){
         setDeleteMode(prev => !prev)
         productScale.value = withTiming(!deleteMode ? .9 : 1, {duration:150})
@@ -79,7 +82,7 @@ export default function Wishlist() {
     async function deleteWishlistItems(){
         setDeleteMode(false)
         productScale.value = withTiming(1, {duration:150})
-        const filteredProducts = wishlist.filter(product => !selectedProducts.includes(auth ? product.productDocId : product._id))
+        const filteredProducts = wishlist.filter(product => !selectedProducts.includes(product.productDocId || product._id))
         setWishlist([...filteredProducts])
         const session = await AsyncStorage.getItem("session")
         if(session){
@@ -97,7 +100,7 @@ export default function Wishlist() {
         }else{
             const newWishlist:LocalWishlistItem[] = []
             filteredProducts.forEach(product => {
-                newWishlist.push({productDocId:product._id})
+                newWishlist.push({productDocId:product.productDocId})
             })
             await AsyncStorage.setItem("wishlist", JSON.stringify(newWishlist))
         }
@@ -122,9 +125,11 @@ return (
             style={{width:dvw}}
             contentContainerStyle={{alignItems:'center'}}
             data={wishlist}
-            renderItem={({item}) => (
-                <Animated.View style={productScaleAnim}>
-                    <Pressable onPress={() => addOrRemoveProduct(auth ? item.productDocId : item._id)} onLongPress={toggleDeleteMode} style={[styles.product, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:6} : {backgroundColor:'white', shadowColor:'black', elevation:4}]}>
+            renderItem={({item}) => {
+                console.log(item)
+                return (
+                <Animated.View style={productScaleAnim} key={item.productDocId || item._id}>
+                    <Pressable onPress={() => addOrRemoveProduct(item.productDocId || item._id)} onLongPress={toggleDeleteMode} style={[styles.product, darkMode ? {backgroundColor:colors.black, shadowColor:'white', elevation:6} : {backgroundColor:'white', shadowColor:'black', elevation:4}]}>
                         <Image style={styles.productImage} source={{uri:auth ? item.productImage : item.pictures[0]}}/>
                         <View style={styles.productDataWrapper}>
                             <Text style={[styles.name, darkMode ? {color:'white'} : {color:'black'}]}>{item.productName}</Text>
@@ -133,12 +138,12 @@ return (
                         </View>
                         {deleteMode &&
                             <Animated.View entering={FadeInUp} exiting={FadeOutUp} style={[styles.checkmarkWrapper, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
-                                {selectedProducts.includes(auth ? item.productDocId : item._id) &&<Animated.Image entering={FadeIn.duration(100)} exiting={FadeOut.duration(100)}  style={styles.checkmark} source={darkMode? require('../images/checkmark.png') : require("../images/checkmarkBlack.png")}/>}
+                                {selectedProducts.includes(item.productDocId || item._id) && <Animated.Image entering={FadeIn.duration(100)} exiting={FadeOut.duration(100)}  style={styles.checkmark} source={darkMode? require('../images/checkmark.png') : require("../images/checkmarkBlack.png")}/>}
                             </Animated.View>
                         }
                     </Pressable>
                 </Animated.View>
-            )}
+            )}}
         />}
         {selectedProducts.length > 0 && deleteMode &&
                 <APressable onPress={() => deleteWishlistItems()} entering={FadeInRight.duration(150)} exiting={FadeOutRight.duration(150)}  style={[styles.deleteButton, darkMode ? {borderColor:'white'} : {borderColor:'black'}]}>

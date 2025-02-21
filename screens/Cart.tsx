@@ -38,19 +38,15 @@ export default function Cart() {
                         }
                     })
                     const cartItems = await res.json()
-                    console.log(cartItems)
                     if(cartItems.cartProducts){
                         setCart([...cartItems.cartProducts])
                     }else{
                         setCart([])
                     }
-                    
-                }
-                else{
+                }else{
                     const stringCart = await AsyncStorage.getItem("cart")
                     if(stringCart){
                         const localCart = JSON.parse(stringCart)
-                        // return
                         const productPromises: Promise<Response>[] = []
                         localCart.forEach(async (product:LocalCartItem) => {
                             const promise = fetch(`${URL}/api/productDetails?_id=${product.productDocId}&desiredQuantity=${product.desiredQuantity}`)
