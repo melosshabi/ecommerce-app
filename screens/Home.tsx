@@ -5,9 +5,11 @@ import {URL} from "@env"
 import colors from '../lib/colors'
 import Footer from '../components/Footer'
 import Product from '../components/Product'
+import { DrawerScreenProps } from '@react-navigation/drawer'
 
 const dvh = Dimensions.get("screen").height
-export default function Home() {
+type HomeParams = DrawerScreenProps<ComponentProps, "Home">
+export default function Home({route}:HomeParams) {
     const darkMode = useColorScheme() === 'dark'
     const [products, setProducts] = useState<Product[]>([])
     useEffect(() => {
@@ -58,7 +60,7 @@ return (
                 <Animated.View style={[styles.progressBar, progressBarStyle]}></Animated.View>
             </Animated.View>
         }
-        <Footer currentScreen='Home'/>
+        <Footer currentScreen='Home' userLoggedOut={route.params?.userLoggedOut}/>
     </View>
 )}
 

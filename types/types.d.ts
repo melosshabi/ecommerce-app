@@ -12,7 +12,8 @@ interface Product {
     createdAt:Date
 }
 type Footer = {
-    currentScreen:"Home" | "Search" | "Cart" | "Wishlist" | "Profile" | "Account" |  undefined
+    currentScreen:"Home" | "Search" | "Cart" | "Wishlist" | "Profile" | "Account" |  undefined,
+    userLoggedOut?:boolean
 }
 type ProductProps = {
     _id:string,
@@ -22,7 +23,7 @@ type ProductProps = {
     animationFunction:(option:"Cart" | "Wishlist") => void
 }
 type ComponentProps = {
-    Home:undefined,
+    Home:undefined | {userLoggedOut:boolean}
     ProductDetails:{
         _id:string
     }

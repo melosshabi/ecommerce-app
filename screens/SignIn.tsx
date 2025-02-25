@@ -1,10 +1,10 @@
 import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native'
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import colors from '../lib/colors'
 import { Formik } from 'formik'
 import * as yup from 'yup'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
-import { useNavigation } from '@react-navigation/native'
+import { useIsFocused, useNavigation } from '@react-navigation/native'
 import { jwtDecode } from "jwt-decode";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DrawerScreenProps } from '@react-navigation/drawer'
@@ -73,6 +73,12 @@ export default function Signin({route}:SignInParams) {
         // @ts-ignore
         navigation.navigate("Home")
     }
+    const isFocused = useIsFocused()
+    useEffect(() => {
+        if(!isFocused){
+            setAuthInProgress(false)
+        }
+    }, [isFocused])
 return (
     <View style={[styles.signInScreen, {backgroundColor: scheme ? colors.black : 'white'}]}>
         <Text style={[styles.title]}>Welcome Back!</Text>

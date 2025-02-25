@@ -1,25 +1,37 @@
 import { Dimensions, Image, Pressable, StyleSheet, useColorScheme, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import colors from '../lib/colors'
-import { useNavigation } from '@react-navigation/native'
+import { useIsFocused, useNavigation } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const screen = Dimensions.get("screen")
 const dvw = screen.width
 const dvh = screen.height
-export default function Footer({currentScreen}:Footer) {
+export default function Footer({currentScreen, userLoggedOut}:Footer) {
     const darkMode = useColorScheme() == 'dark'
     const navigation = useNavigation()
     const [auth, setAuth] = useState(false)
+    const isFocused = useIsFocused()
     useEffect(() => {
-        async function getToken(){
-            const jwt = await AsyncStorage.getItem("session")
-            if(jwt){
-                setAuth(true)
+        if(isFocused){
+            async function getToken(){
+                const jwt = await AsyncStorage.getItem("session")
+                if(jwt){
+                    setAuth(true)
+                }else{
+                    setAuth(false)
+                }
             }
+            getToken()
+        }else if(!isFocused && userLoggedOut){
+            setAuth(false)
         }
-        getToken()
-    }, [])
+    }, [isFocused])
+    useEffect(() => {
+        if(userLoggedOut){
+            setAuth(false)
+        }
+    }, [userLoggedOut])
 return (
     <View style={[styles.footer, darkMode ? {backgroundColor:colors.black, shadowColor:'white', borderTopColor:colors.transparentWhite,} : {backgroundColor:'white', shadowColor:'black', borderTopColor:colors.black3,}]}>
         {/* @ts-ignore */}

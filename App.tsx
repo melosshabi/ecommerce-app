@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useIsFocused } from '@react-navigation/native';
 import { createDrawerNavigator, DrawerContentComponentProps } from '@react-navigation/drawer';
 import HamburgerButton from './components/HamburgerButton';
 import { Dimensions, Image, Pressable, SafeAreaView, StyleSheet, Text, useColorScheme, View } from 'react-native';
@@ -38,7 +38,7 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
     setUser(null)
     await AsyncStorage.removeItem('session')
     navigation.closeDrawer()
-    navigation.navigate("Home", undefined)
+    navigation.navigate("Home", {userLoggedOut:true})
   }
   return (
     <View style={[styles.drawer, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
@@ -90,7 +90,7 @@ function drawerContent({navigation}:DrawerContentComponentProps, darkMode:boolea
     </View>
   )
 }
-const Drawer = createDrawerNavigator<ComponentProps>();
+const Drawer = createDrawerNavigator<ComponentProps>()
 export default function App() {
   const scheme = useColorScheme()
   return (

@@ -1,5 +1,5 @@
 import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, ScrollView, Alert } from 'react-native'
-import React, { useEffect, useState, useTransition } from 'react'
+import React, { useEffect, useState } from 'react'
 import { DrawerScreenProps } from '@react-navigation/drawer'
 import {URL, STRIPE_PUBLISHABLE_KEY} from "@env"
 import colors from '../lib/colors'
