@@ -8,6 +8,7 @@ import { Formik } from 'formik'
 import { Asset, launchImageLibrary } from 'react-native-image-picker'
 import Animated, { BounceInRight, BounceOutRight, useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import {URL} from "@env"
 
 export default function PostProduct() {
   const darkMode = useColorScheme() === 'dark'
@@ -146,7 +147,7 @@ export default function PostProduct() {
                   <Text style={[styles.text, {fontSize:14}, darkMode ? {color:'white'} : {color:'black'}]}>{productPictures.length} pictures selected</Text>
                 </View>
                 <Pressable disabled={uploadInProgress} onPress={() => handleSubmit()} style={({pressed}) => [styles.selectBtn, styles.submitBtn, darkMode ? {shadowColor:'white', elevation:2} : {shadowColor:"black", elevation:4}, pressed || uploadInProgress ? {backgroundColor:colors.darkerOrange} : {}]}>
-                  <Text style={[styles.text, {fontSize:17}, darkMode ? {color:'white'} : {color:'black'}]}>Submit</Text>
+                  <Text style={[styles.text, {fontSize:17}, darkMode ? {color:'white'} : {color:'black'}]}>{!uploadInProgress ? 'Submit' : "Uploading"}</Text>
                 </Pressable>
               </Animated.View>
             )}
@@ -166,7 +167,7 @@ export default function PostProduct() {
 
 const styles = StyleSheet.create({
   postProductScreen:{ 
-    // height:'100%',
+    minHeight:'93%',
     flex:1,
     justifyContent:'space-between',
     alignItems:'center'
@@ -217,7 +218,7 @@ const styles = StyleSheet.create({
     padding:15,
     borderRadius:8,
     position:'absolute',
-    bottom:60,
+    bottom:75,
     right:10
   },
   checkmark:{

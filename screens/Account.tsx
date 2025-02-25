@@ -281,7 +281,7 @@ export default function Account() {
 
 const styles = StyleSheet.create({
   accountScreen:{
-    height:'100%',
+    minHeight:'93%',
     justifyContent:'space-between'
   },
   pfpWrapper:{

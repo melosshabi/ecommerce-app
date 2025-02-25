@@ -6,20 +6,24 @@ import colors from '../lib/colors'
 import Footer from '../components/Footer'
 import Product from '../components/Product'
 import { DrawerScreenProps } from '@react-navigation/drawer'
+import { useIsFocused } from '@react-navigation/native'
 
 const dvh = Dimensions.get("screen").height
 type HomeParams = DrawerScreenProps<ComponentProps, "Home">
 export default function Home({route}:HomeParams) {
     const darkMode = useColorScheme() === 'dark'
     const [products, setProducts] = useState<Product[]>([])
+    const isFocused = useIsFocused()
     useEffect(() => {
         async function getProducts(){
             const res = await fetch(`${URL}/api/getProducts`)
             const data = await res.json()
             setProducts([...data.products])
         }
-        getProducts()
-    },[])
+        if(isFocused){
+            getProducts()
+        }
+    }, [isFocused])
     const [showNotif, setShowNotif] = useState(false)
     const progressBarWidth = useSharedValue('85%')
     // @ts-ignore

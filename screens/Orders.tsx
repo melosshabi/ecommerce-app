@@ -1,47 +1,54 @@
 import { FlatList, Image, StyleSheet, Text, useColorScheme, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import colors from '../lib/colors'
-import { useNavigation } from '@react-navigation/native'
+import { useIsFocused, useNavigation } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getMonthString } from '../lib/lib'
 import Footer from '../components/Footer'
 import { URL } from '@env'
+import Loader from '../components/Loader'
 
 export default function Orders() {
   const darkMode = useColorScheme() === 'dark'
   const [orders, setOrders] = useState<OrderData[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const navigation = useNavigation()
+  const [reqPending, setReqPending] = useState(true)
+  const isFocused = useIsFocused()
   useEffect(() => {
     const controller = new AbortController()
-    async function fetchOrders(){
-      const session = await AsyncStorage.getItem("session")
-      if(!session){
-        // @ts-ignore
-        navigation.navigate("SignIn", undefined)
+    if(isFocused){
+      async function fetchOrders(){
+        const session = await AsyncStorage.getItem("session")
+        if(!session){
+          // @ts-ignore
+          navigation.navigate("SignIn", undefined)
+        }
+        const res = await fetch(`${URL}/api/orders`,
+          {
+            signal:controller.signal,
+            headers:{
+              "Mobile":"True",
+              "Authorization":`Bearer ${session}`
+            }
+          })
+            const data = await res.json()
+            if(data.errCode === "unauthenticated"){
+              // @ts-ignore
+              navigation.navigate("SignIn", undefined)
+              return
+            }
+            setOrders(prev => [...prev, ...data.userOrders])
+            setProducts(prev => [...prev, ...data.products])
       }
-      const res = await fetch(`${URL}/api/orders`,
-        {
-          signal:controller.signal,
-          headers:{
-            "Mobile":"True",
-            "Authorization":`Bearer ${session}`
-          }
-        })
-          const data = await res.json()
-          if(data.errCode === "unauthenticated"){
-            // @ts-ignore
-            navigation.navigate("SignIn", undefined)
-            return
-          }
-          setOrders(prev => [...prev, ...data.userOrders])
-          setProducts(prev => [...prev, ...data.products])
+      fetchOrders().then(() => setReqPending(false))
     }
-    fetchOrders()
+    
     return () => controller.abort()
-  }, [])
+  }, [isFocused])
   return (
     <View style={[{height:'100%', justifyContent:'space-between'}, darkMode ? {backgroundColor:colors.black} : {backgroundColor:'white'}]}>
+        {reqPending && <Loader/>}
         <Text style={[styles.title, darkMode ? {color:'white'} : {color:'black'}]}>My Orders</Text>
         { orders.length > 0 && products.length > 0 && 
         <FlatList
