@@ -1,4 +1,4 @@
-import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native'
+import { Dimensions, Image, KeyboardAvoidingView, Pressable, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import colors from '../lib/colors'
 import { Formik } from 'formik'
@@ -80,77 +80,79 @@ export default function Signin({route}:SignInParams) {
         }
     }, [isFocused])
 return (
-    <View style={[styles.signInScreen, {backgroundColor: scheme ? colors.black : 'white'}]}>
-        <Text style={[styles.title]}>Welcome Back!</Text>
-        <Image style={styles.backgroundImage} blurRadius={10} source={require('../images/decoration.jpg')}/>
-        <View style={styles.imageForeground}></View>
-        <Formik
-            initialValues={{username:'', password:''}}
-            validationSchema={signInSchema}
-            onSubmit={values => signIn(values.username, values.password)}
-        >
-            {({handleChange, handleBlur, values, handleSubmit}) => (
-            <Animated.View style={[styles.form]} >
-                {/* Username */}
-                <View style={styles.inputWrappers}>
-                    <Image source={require('../images/userIcon.png')} style={styles.inputIcons}/>
-                    <ATextInput
-                        onChangeText={handleChange('username')}
-                        onChange={() => {
-                            if(formErrors.username) setFormErrors(prev => ({...prev, username:''}))
-                        }}
-                        onBlur={() => {
-                            handleBorderColorChange('username', false)
-                            handleBlur('username')
-                        }}
-                        value={values.username}
-                        placeholder='Username'
-                        placeholderTextColor='white'
-                        autoCapitalize='none'
-                        style={[styles.inputs, usernameBorderAnimStyle]}
-                        onFocus={() => handleBorderColorChange('username', true)}
-                        returnKeyType="next"
-                        // @ts-ignore
-                        onSubmitEditing={() => passwordInputRef.current.focus()}
-                    />
-                </View>
-                 {/* Password */}
-                <View style={styles.inputWrappers}>
-                    <Image source={require('../images/passwordIcon.png')} style={styles.inputIcons}/>
-                    <ATextInput
-                        ref={passwordInputRef}
-                        onChangeText={handleChange('password')}
-                        onChange={() => {
-                            if(formErrors.username) setFormErrors(prev => ({...prev, username:''}))
-                        }}
-                        onBlur={() => {
-                            handleBorderColorChange('password', false)
-                            handleBlur('password')
-                        }}
-                        value={values.password}
-                        placeholder='Password'
-                        placeholderTextColor='white'
-                        autoCapitalize='none'
-                        style={[styles.inputs, passwordBorderAnimStyle]}
-                        onFocus={() => handleBorderColorChange('password', true)}
-                        secureTextEntry={true}
-                    />
-                </View>
-                <Pressable disabled={authInProgress} onPress={() => handleSubmit()} style={({pressed}) => [styles.signInBtn, pressed && {backgroundColor:colors.darkerOrange}, authInProgress && {opacity:.7}]}>
-                    <Text style={styles.signInBtnText}>{!authInProgress ? "Sign In" : "Signing In"}</Text>
-                </Pressable>
-            </Animated.View>
-            )}
-            
-        </Formik>
-    </View>
+    <KeyboardAvoidingView behavior='height'>
+        <View style={[styles.signInScreen]}>
+            <Text style={[styles.title]}>Welcome Back!</Text>
+            <Image style={styles.backgroundImage} blurRadius={10} source={require('../images/decoration.jpg')}/>
+            <View style={styles.imageForeground}></View>
+            <Formik
+                initialValues={{username:'', password:''}}
+                validationSchema={signInSchema}
+                onSubmit={values => signIn(values.username, values.password)}
+            >
+                {({handleChange, handleBlur, values, handleSubmit}) => (
+                <Animated.View style={[styles.form]} >
+                    {/* Username */}
+                    <View style={styles.inputWrappers}>
+                        <Image source={require('../images/userIcon.png')} style={styles.inputIcons}/>
+                        <ATextInput
+                            onChangeText={handleChange('username')}
+                            onChange={() => {
+                                if(formErrors.username) setFormErrors(prev => ({...prev, username:''}))
+                            }}
+                            onBlur={() => {
+                                handleBorderColorChange('username', false)
+                                handleBlur('username')
+                            }}
+                            value={values.username}
+                            placeholder='Username'
+                            placeholderTextColor='white'
+                            autoCapitalize='none'
+                            style={[styles.inputs, usernameBorderAnimStyle]}
+                            onFocus={() => handleBorderColorChange('username', true)}
+                            returnKeyType="next"
+                            // @ts-ignore
+                            onSubmitEditing={() => passwordInputRef.current.focus()}
+                        />
+                    </View>
+                     {/* Password */}
+                    <View style={styles.inputWrappers}>
+                        <Image source={require('../images/passwordIcon.png')} style={styles.inputIcons}/>
+                        <ATextInput
+                            ref={passwordInputRef}
+                            onChangeText={handleChange('password')}
+                            onChange={() => {
+                                if(formErrors.username) setFormErrors(prev => ({...prev, username:''}))
+                            }}
+                            onBlur={() => {
+                                handleBorderColorChange('password', false)
+                                handleBlur('password')
+                            }}
+                            value={values.password}
+                            placeholder='Password'
+                            placeholderTextColor='white'
+                            autoCapitalize='none'
+                            style={[styles.inputs, passwordBorderAnimStyle]}
+                            onFocus={() => handleBorderColorChange('password', true)}
+                            secureTextEntry={true}
+                        />
+                    </View>
+                    <Pressable disabled={authInProgress} onPress={() => handleSubmit()} style={({pressed}) => [styles.signInBtn, pressed && {backgroundColor:colors.darkerOrange}, authInProgress && {opacity:.7}]}>
+                        <Text style={styles.signInBtnText}>{!authInProgress ? "Sign In" : "Signing In"}</Text>
+                    </Pressable>
+                </Animated.View>
+                )}
+                
+            </Formik>
+        </View>
+    </KeyboardAvoidingView>
 )}
 
 const styles = StyleSheet.create({
     signInScreen:{
         height:'100%',
         alignItems:'center',
-        justifyContent:'flex-end'
+        justifyContent:'flex-end',
     },
     title:{
         textAlign:'center',
@@ -164,7 +166,7 @@ const styles = StyleSheet.create({
         width:dvw + dvw / 2,
         height:dvh,
         position:'absolute',
-        zIndex:-2,
+        zIndex:-1,
     },
     imageForeground:{
         width:dvw,

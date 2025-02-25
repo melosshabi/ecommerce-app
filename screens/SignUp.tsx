@@ -1,4 +1,4 @@
-import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, Keyboard } from 'react-native'
+import { Dimensions, Image, Pressable, StyleSheet, Text, TextInput, useColorScheme, View, Keyboard, KeyboardAvoidingView } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
 import colors from '../lib/colors'
 import { Formik } from 'formik'
@@ -101,7 +101,8 @@ export default function Signup({route}:SignUpParams) {
         navigation.navigate("Home")
     }
 return (
-    <View style={[styles.signUpScreen, {backgroundColor: scheme ? colors.black : 'white'}]}>
+    <KeyboardAvoidingView behavior='height'>
+    <View style={[styles.signUpScreen]}>
         <Text style={[styles.title]}>Welcome!</Text>
         <Image style={styles.backgroundImage} blurRadius={10} source={require('../images/decoration.jpg')}/>
         <View style={styles.imageForeground}></View>
@@ -193,6 +194,7 @@ return (
             
         </Formik>
     </View>
+    </KeyboardAvoidingView>
 )}
 
 const styles = StyleSheet.create({

@@ -167,7 +167,7 @@ export default function PostProduct() {
 
 const styles = StyleSheet.create({
   postProductScreen:{ 
-    minHeight:'93%',
+    minHeight:'92%',
     flex:1,
     justifyContent:'space-between',
     alignItems:'center'
